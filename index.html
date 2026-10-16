@@ -1,11 +1,329 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My first page</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Korin &amp; Nimbus Rate Albums</title>
+<meta name="description" content="Two friends, four albums a week, one rating sheet. Every album we've rated, with the scores side by side.">
+<style>
+  /* ---------- 1. COLORS & FONTS (change these first!) ---------- */
+  :root {
+    --bg: #f6f1e7;          /* page background */
+    --card: #fffdf8;        /* album rows */
+    --ink: #1c1a17;         /* main text */
+    --muted: #6b655b;       /* secondary text */
+    --line: #e1d9c8;        /* borders */
+    --accent: #c4361b;      /* highlight color */
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-title: Georgia, "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17150f; --card: #211e16; --ink: #f1ecdf;
+      --muted: #a39b88; --line: #38332a; --accent: #ff6b4a;
+    }
+  }
+
+  /* ---------- 2. LAYOUT ---------- */
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font); line-height: 1.45;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 64px; }
+
+  header h1 {
+    font-family: var(--font-title); font-weight: 700;
+    font-size: clamp(2rem, 6vw, 3.4rem); line-height: 1.05; margin: 0 0 12px;
+  }
+  header h1 span { color: var(--accent); }
+  header p { max-width: 62ch; color: var(--muted); margin: 0 0 8px; font-size: 1.05rem; }
+
+  /* stats strip */
+  .stats { display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 28px 0; padding: 16px 0;
+           border-block: 1px solid var(--line); }
+  .stat b { display: block; font-family: var(--font-title); font-size: 1.7rem; line-height: 1.1; }
+  .stat b.long { font-size: 1.15rem; max-width: 24ch; padding-top: .35rem; }
+  .stat small { color: var(--muted); }
+
+  /* controls */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+  .controls input, .controls select {
+    font: inherit; color: var(--ink); background: var(--card);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+  }
+  .controls input { flex: 1 1 220px; }
+  .count { color: var(--muted); align-self: center; font-size: .9rem; }
+
+  /* ---------- 3. ONE ALBUM ROW ---------- */
+  .album {
+    display: grid; grid-template-columns: 1.3fr auto 1.5fr; gap: 16px 28px; align-items: start;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 10px;
+  }
+  .title { font-family: var(--font-title); font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+  .artist { color: var(--muted); }
+  .meta { margin-top: 6px; font-size: .82rem; color: var(--muted); }
+  .comment { margin-top: 8px; font-style: italic; font-size: .92rem; }
+
+  .scores { display: flex; gap: 14px; }
+  .score { text-align: center; min-width: 74px; }
+  .score .who { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .score .num { font-family: var(--font-title); font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+  .grade { display: inline-block; min-width: 2.2em; padding: 1px 8px; border-radius: 99px; font-size: .78rem;
+           font-weight: 700; color: #fff; background: var(--muted); }
+  .g-Jimmey { background: #b8860b; }
+  .g-S { background: #2f8f4e; }
+  .g-A { background: #4a9a8a; }
+  .g-B { background: #4f78b0; }
+  .g-C { background: #8a7fb0; }
+  .g-D { background: #b0793a; }
+  .g-Bean  { background: #7a4b2a; }
+
+  .details { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: .9rem; margin: 0; }
+  .details dt { color: var(--muted); }
+  .details dd { margin: 0; }
+  .both { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-left: 6px; }
+  .split { display: block; }
+  .split i { font-style: normal; color: var(--muted); }
+
+  .flag { color: var(--accent); font-weight: 600; }
+  .empty, .error { padding: 32px; text-align: center; color: var(--muted); }
+  .error { color: var(--accent); }
+  footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
+
+  /* phones: stack everything */
+  @media (max-width: 760px) {
+    .album { grid-template-columns: 1fr; }
+    .scores { justify-content: flex-start; }
+  }
+</style>
 </head>
 <body>
-  <h1>Hello internet</h1>
-  <p>This is my website.</p>
+<main>
+  <header>
+    <h1>Korin <span>&amp;</span> Nimbus<br>rate albums</h1>
+    <p>Every week we each pick two albums. We listen for seven days, then rate them: the album as a whole (0&ndash;10), the cover, our favorite song, the best feature and the best instrumental.</p>
+    <p>Grades run from <b>Jimmey</b> (a perfect 10) down through S, A, B, C and D to <b>Bean</b> (a bad album).</p>
+  </header>
+
+  <section class="stats" id="stats" aria-label="Summary"></section>
+
+  <section class="controls">
+    <input id="search" type="search" placeholder="Search album, artist, song, feature…" aria-label="Search">
+    <select id="sort" aria-label="Sort by">
+      <option value="date-desc">Newest rated first</option>
+      <option value="date-asc">Oldest rated first</option>
+      <option value="avg-desc">Highest average rating</option>
+      <option value="avg-asc">Lowest average rating</option>
+      <option value="diff-desc">Biggest disagreement</option>
+      <option value="year-desc">Release year (newest)</option>
+      <option value="year-asc">Release year (oldest)</option>
+      <option value="artist-asc">Artist A–Z</option>
+      <option value="album-asc">Album A–Z</option>
+    </select>
+    <span class="count" id="count"></span>
+  </section>
+
+  <section id="list" aria-live="polite"><div class="empty">Loading albums…</div></section>
+
+  <footer>Ratings live in a spreadsheet; this page reads it every time you open it.</footer>
+</main>
+
+<script src="xlsx.full.min.js"></script>
+<script>
+/* ---------- 4. SETTINGS ---------- */
+const DATA_FILE = "albums.xlsx";   // the Excel file sitting next to this page
+const NAME_1 = "Nimbus";           // must match the column names in the sheet
+const NAME_2 = "Korin";
+
+/* ---------- 5. READ THE EXCEL FILE ---------- */
+let albums = [];
+
+async function loadAlbums() {
+  const res = await fetch(DATA_FILE + "?v=" + Date.now());   // ?v= avoids an old cached copy
+  if (!res.ok) throw new Error("Could not load " + DATA_FILE + " (" + res.status + ")");
+  const wb = XLSX.read(await res.arrayBuffer(), { type: "array" });
+  const ws = wb.Sheets[wb.SheetNames[0]];          // first sheet in the workbook
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+
+  // find the header row (the row that contains "Album")
+  let headerRow = -1;
+  for (let r = range.s.r; r <= Math.min(range.e.r, range.s.r + 10) && headerRow < 0; r++) {
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      if (text(ws[XLSX.utils.encode_cell({ r, c })]).toLowerCase() === "album") { headerRow = r; break; }
+    }
+  }
+  if (headerRow < 0) throw new Error('No header row with an "Album" column found.');
+
+  // map column name -> column number, so the order of columns doesn't matter
+  const col = {};
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const h = text(ws[XLSX.utils.encode_cell({ r: headerRow, c })]).toLowerCase();
+    if (h) col[h] = c;
+  }
+  const cell = (r, name) => ws[XLSX.utils.encode_cell({ r, c: col[name.toLowerCase()] })];
+  const has = name => col[name.toLowerCase()] !== undefined;
+
+  const out = [];
+  for (let r = headerRow + 1; r <= range.e.r; r++) {
+    const title = text(cell(r, "Album"));
+    if (!title) continue;                          // skip empty rows
+    const n1 = score(cell(r, "O.R. " + NAME_1)), n2 = score(cell(r, "O.R. " + NAME_2));
+    out.push({
+      title, artist: text(cell(r, "Artist")),
+      year: num(cell(r, "Year")),
+      date: excelDate(cell(r, "Dates")),
+      by: has("Picked By") ? text(cell(r, "Picked By")) : "",
+      comment: has("Comments") ? text(cell(r, "Comments")) : "",
+      r1: n1, r2: n2,
+      avg: n1 != null && n2 != null ? (n1 + n2) / 2 : (n1 ?? n2),
+      diff: n1 != null && n2 != null ? Math.abs(n1 - n2) : null,
+      song:  [text(cell(r, "Top Song " + NAME_1)), text(cell(r, "Top Song " + NAME_2))],
+      feat:  [text(cell(r, "Best Feature " + NAME_1)), text(cell(r, "Best Feature " + NAME_2))],
+      instr: [text(cell(r, "Best Instrumentals " + NAME_1)), text(cell(r, "Best Instrumentals " + NAME_2))],
+      cover: [score(cell(r, "Cover Rating " + NAME_1)), score(cell(r, "Cover Rating " + NAME_2))],
+    });
+  }
+  return out;
+}
+
+/* helpers that turn messy spreadsheet cells into clean values */
+function text(c) { return c ? String(c.w ?? c.v ?? "").trim() : ""; }       // .w = text as shown in Excel
+function num(c)  { return c && typeof c.v === "number" ? c.v : null; }
+function score(c) {                                  // 9.6, "8,0/10", "Jimmey" -> number
+  if (!c || c.v == null) return null;
+  if (typeof c.v === "number") return c.v;
+  const s = String(c.v).trim();
+  if (s.toLowerCase() === "jimmey") return 10;
+  const m = s.replace(",", ".").match(/^(\d+(?:\.\d+)?)/);
+  return m ? parseFloat(m[1]) : null;
+}
+function excelDate(c) {                               // Excel stores dates as day numbers
+  return c && typeof c.v === "number" ? Math.round((c.v - 25569) * 86400000) : null;
+}
+function grade(n) {                                   // same rules as the Excel formula
+  if (n == null) return "";
+  if (n === 10) return "Jimmey";
+  if (n > 8.9) return "S";
+  if (n > 8.4) return "A";
+  if (n > 7.9) return "B";
+  if (n > 6.9) return "C";
+  if (n > 5.9) return "D";
+  return "Bean";
+}
+
+/* ---------- 6. DRAW THE PAGE ---------- */
+function h(tag, cls, content) {                       // tiny helper to build elements safely
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (content != null) e.textContent = content;
+  return e;
+}
+const fmt = n => n == null ? "–" : (Number.isInteger(n) ? n.toFixed(0) : n.toFixed(1));
+const fmtDate = ms => ms == null ? "" : new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const blank = s => !s || s === "/" || s === "-";
+
+function pair(a, b, dd) {                             // show one value, or both if they differ
+  if (blank(a) && blank(b)) { dd.textContent = "–"; return; }
+  if (!blank(a) && a.toLowerCase() === b.toLowerCase()) {
+    dd.append(a); dd.append(h("span", "both", "both")); return;
+  }
+  for (const [name, val] of [[NAME_1, a], [NAME_2, b]]) {
+    const line = h("span", "split");
+    line.append(h("i", null, name + ": "), blank(val) ? "–" : val);
+    dd.append(line);
+  }
+}
+
+function scoreBox(name, n) {
+  const box = h("div", "score");
+  box.append(h("div", "who", name), h("div", "num", fmt(n)));
+  const g = grade(n);
+  if (g) box.append(h("span", "grade g-" + g, g));
+  return box;
+}
+
+function albumRow(a) {
+  const row = h("article", "album");
+
+  const left = h("div");
+  left.append(h("div", "title", a.title), h("div", "artist", a.artist));
+  const meta = [a.year, a.by && "picked by " + a.by, a.date && "rated " + fmtDate(a.date)].filter(Boolean).join(" · ");
+  left.append(h("div", "meta", meta));
+  if (a.diff >= 2) left.append(h("div", "meta flag", "We disagree by " + fmt(a.diff) + " points"));
+  if (a.comment) left.append(h("div", "comment", a.comment));
+
+  const scores = h("div", "scores");
+  scores.append(scoreBox(NAME_1, a.r1), scoreBox(NAME_2, a.r2));
+
+  const dl = h("dl", "details");
+  for (const [label, vals] of [["Top song", a.song], ["Best feature", a.feat], ["Best instrumental", a.instr]]) {
+    const dd = h("dd");
+    pair(vals[0], vals[1], dd);
+    dl.append(h("dt", null, label), dd);
+  }
+  const cov = h("dd");
+  cov.textContent = a.cover[0] === a.cover[1] ? fmt(a.cover[0]) + " / 10" : NAME_1 + " " + fmt(a.cover[0]) + " · " + NAME_2 + " " + fmt(a.cover[1]);
+  if (a.cover[0] === a.cover[1] && a.cover[0] != null) cov.append(h("span", "both", "both"));
+  dl.append(h("dt", null, "Cover"), cov);
+
+  row.append(left, scores, dl);
+  return row;
+}
+
+const SORTS = {
+  "date-desc":  (a, b) => (b.date ?? -Infinity) - (a.date ?? -Infinity),
+  "date-asc":   (a, b) => (a.date ?? Infinity) - (b.date ?? Infinity),
+  "avg-desc":   (a, b) => (b.avg ?? -1) - (a.avg ?? -1),
+  "avg-asc":    (a, b) => (a.avg ?? 99) - (b.avg ?? 99),
+  "diff-desc":  (a, b) => (b.diff ?? -1) - (a.diff ?? -1),
+  "year-desc":  (a, b) => (b.year ?? -1) - (a.year ?? -1),
+  "year-asc":   (a, b) => (a.year ?? 9999) - (b.year ?? 9999),
+  "artist-asc": (a, b) => a.artist.localeCompare(b.artist),
+  "album-asc":  (a, b) => a.title.localeCompare(b.title),
+};
+
+function render() {
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const list = document.getElementById("list");
+  const shown = albums
+    .filter(a => !q || [a.title, a.artist, a.comment, ...a.song, ...a.feat, ...a.instr].join(" ").toLowerCase().includes(q))
+    .sort(SORTS[document.getElementById("sort").value]);
+  list.replaceChildren(...(shown.length ? shown.map(albumRow) : [h("div", "empty", "No albums match that search.")]));
+  document.getElementById("count").textContent = shown.length + " of " + albums.length + " albums";
+}
+
+function renderStats() {
+  const avg = k => { const v = albums.map(a => a[k]).filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+  const split = albums.filter(a => a.diff != null).sort(SORTS["diff-desc"])[0];
+  const best = albums.filter(a => a.avg != null).sort(SORTS["avg-desc"])[0];
+  const items = [
+    [albums.length, "albums rated"],
+    [fmt(avg("r1") && +avg("r1").toFixed(2)), NAME_1 + "’s average"],
+    [fmt(avg("r2") && +avg("r2").toFixed(2)), NAME_2 + "’s average"],
+  ];
+  if (best) items.push([best.title, "highest rated (avg " + fmt(+best.avg.toFixed(2)) + ")"]);
+  if (split && split.diff > 0) items.push([split.title, "biggest split (" + fmt(split.diff) + (split.diff === 1 ? " point" : " points") + " apart)"]);
+  document.getElementById("stats").replaceChildren(...items.map(([big, small]) => {
+    const d = h("div", "stat"); d.append(h("b", String(big).length > 8 ? "long" : null, big), h("small", null, small)); return d;
+  }));
+}
+
+/* ---------- 7. START ---------- */
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("sort").addEventListener("change", render);
+
+loadAlbums().then(data => {
+  albums = data;
+  renderStats();
+  render();
+}).catch(err => {
+  const msg = location.protocol === "file:"
+    ? "Browsers block reading files when a page is opened by double-clicking it. Open it through GitHub Pages instead, or use the Live Server extension in VS Code."
+    : err.message;
+  document.getElementById("list").replaceChildren(h("div", "error", msg));
+});
+</script>
 </body>
 </html>
