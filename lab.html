@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Lab – Korin &amp; Nimbus</title>
+<meta name="description" content="A taste map, ratings by decade, us versus the critics, a guess-the-score game, recommendations and hot takes.">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---- Guess the score: fixes ---- */
+.g-main { grid-template-columns: 190px minmax(0, 1fr); align-items: start; }
+.g-main > .cover { grid-area: auto; width: 100%; }      /* this was the stray little window: the cover was being put in the wrong grid cell */
+.g-sliders { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.g-res .score { min-width: 104px; }
+.slider label { display: block; font-weight: 700; margin-bottom: 2px; }
+.gval { display: flex; align-items: center; gap: 12px; height: 46px; }       /* fixed height = nothing jumps while you slide */
+.gv { font-family: var(--font-display); font-size: 2rem; line-height: 1; white-space: nowrap; min-width: 6.2rem; }
+.gv.jim { font-size: 1.55rem; background: linear-gradient(135deg, #f7c82a, #a87400 60%, #f0b90b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gg { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; width: 5.2em; text-align: center; padding: 4px 0; border-radius: 99px; border: 1px solid rgba(11,15,42,.12); }
+.slider .ends { font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) { .g-main { grid-template-columns: minmax(0, 1fr); } .g-main > .cover { max-width: 190px; } .g-sliders { grid-template-columns: minmax(0, 1fr); } .gv { min-width: 0; } }
+
+/* ---- shared bits for the new tabs ---- */
+.pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; align-items: center; }
+.pillrow .lbl { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.pillbtn { background: var(--card); border: 1px solid var(--line); border-radius: 99px; padding: 6px 14px; font-weight: 700; font-size: .85rem; cursor: pointer; }
+.pillbtn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.callout { background: var(--card); border: 1px dashed #b9bfd8; border-radius: 14px; padding: 20px 22px; max-width: 70ch; }
+.callout h3 { margin: 0 0 8px; }
+.callout code { background: var(--soft); padding: 1px 7px; border-radius: 6px; font-size: .92em; }
+.callout ol { margin: 8px 0 0; padding-left: 20px; }
+.glists { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; margin-top: 26px; }
+.glists h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.glists .hint { margin: 0 0 10px; color: var(--muted); font-size: .88rem; }
+.glists a { display: block; padding: 8px 12px; margin-bottom: 7px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); text-decoration: none; }
+.glists a:hover { border-color: var(--blue); }
+.glists a em { float: right; font-style: normal; font-weight: 700; color: var(--blue); margin-left: 10px; font-variant-numeric: tabular-nums; }
+.glists a span { color: var(--muted); font-size: .85rem; }
+.keyline { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0 0 10px; font-size: .88rem; font-weight: 700; }
+
+/* ---- Chef's choice ---- */
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 2px; }
+.chip { font-size: .66rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; background: var(--soft); color: var(--blue); }
+.shelf-card .chips { margin-top: 2px; }
+.rec-card { margin-top: 6px; }
+.rec-reason { font-size: 1.02rem; margin: 14px 0 0; max-width: 60ch; }
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-top: 12px; }
+.shelf-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; text-decoration: none; }
+.shelf-card:hover { border-color: var(--blue); }
+.shelf-card .cover { width: 100%; }
+.shelf-card b { line-height: 1.15; }
+.shelf-card small { color: var(--muted); }
+.shelf-card .note { margin: 2px 0 0; padding-left: 10px; border-left: 3px solid var(--blue); font-size: .9rem; }
+.shelf-card .sc { font-size: .82rem; font-weight: 700; margin-top: auto; padding-top: 4px; }
+.sec-h { margin: 30px 0 2px; font-size: 1.15rem; }
+
+/* ---- Hot takes ---- */
+.warn { max-width: 560px; margin: 28px 0; text-align: center; background: var(--card); border: 2px solid var(--ink); border-radius: 16px; padding: 30px 22px; }
+.warn .big { font-family: var(--font-display); font-size: clamp(1.8rem, 7vw, 3rem); color: #d1261b; line-height: 1; margin-bottom: 10px; }
+.warn p { margin: 0 0 18px; color: var(--muted); }
+.feed { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; max-width: 700px; margin-top: 6px; }
+.post { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 16px; }
+.post.dilemma { border-left: 6px solid var(--blue); }
+.post .vs { overflow-wrap: break-word; font-family: var(--font-display); font-size: clamp(1.05rem, 4vw, 1.8rem); line-height: 1.15; margin: 0 0 12px; }
+.post .vs i { font-style: normal; color: var(--muted); padding: 0 .35em; font-size: .7em; }
+.take { display: grid; grid-template-columns: 38px 1fr; gap: 4px 12px; margin-top: 12px; }
+.avatar { width: 38px; height: 38px; display: grid; place-items: center; color: #fff; font-weight: 700; }
+.avatar.n { background: var(--s1); border-radius: 50%; }
+.avatar.k { background: var(--s2); border-radius: 9px; }
+.take .who { font-weight: 700; }
+.take .who small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.take p { margin: 2px 0 0; font-size: 1.02rem; white-space: pre-line; }
+.notake { margin: 0; color: var(--muted); font-style: italic; }
+.bynum { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--paper); font-size: .88rem; }
+.bynum b { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 4px; }
+.bynum div + div { margin-top: 2px; }
+.bynum .verdict { margin-top: 6px; font-weight: 700; color: var(--blue); }
+</style>
+</head>
+<body>
+<header class="masthead lab-head">
+  <div class="wrap">
+    <div class="topline"><a href="index.html">← Back to the ratings</a><span>Korin &amp; Nimbus</span></div>
+    <h1>The<br>Lab</h1>
+    <div class="intro">
+      <p>What happens when you do things with <span class="js-total">…</span> ratings. Pick a tab.</p>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="problem"></div>
+  <div class="tabs" role="tablist" aria-label="Lab sections">
+    <button class="tab" role="tab" id="tab-map" aria-controls="panel-map" data-tab="map">Taste map</button>
+    <button class="tab" role="tab" id="tab-decades" aria-controls="panel-decades" data-tab="decades">Ratings by decade</button>
+    <button class="tab" role="tab" id="tab-critics" aria-controls="panel-critics" data-tab="critics">Vs the critics</button>
+    <button class="tab" role="tab" id="tab-guess" aria-controls="panel-guess" data-tab="guess">Guess the score</button>
+    <button class="tab" role="tab" id="tab-chef" aria-controls="panel-chef" data-tab="chef">Chef’s choice</button>
+    <button class="tab" role="tab" id="tab-takes" aria-controls="panel-takes" data-tab="takes">Don’t click this</button>
+  </div>
+
+  <!-- 1. TASTE MAP -->
+  <section class="tabpanel" role="tabpanel" id="panel-map" aria-labelledby="tab-map" hidden>
+    <h2 class="lab-h">Where do we agree, and where don’t we?</h2>
+    <p class="lab-sub">Every dot is an album. <span class="nm1"></span>’s score runs left to right, <span class="nm2"></span>’s runs bottom to top. Dots on the line are albums we scored the same. Hover or tap a dot, then open it.</p>
+    <div class="filters"><label class="check"><input type="checkbox" id="only2"> Only albums where we differ by 2 or more points</label><span class="count" id="mapcount"></span></div>
+    <div class="readout" id="mapfacts"></div>
+    <div class="chart-box" id="mapbox"><div class="tip" id="maptip" hidden></div></div>
+    <div id="mapsel"><p class="sel-hint">Tap a dot to see the album.</p></div>
+    <details class="tableview"><summary>View as table</summary><div class="tablewrap" id="maptable"></div></details>
+  </section>
+
+  <!-- 2. DECADES -->
+  <section class="tabpanel" role="tabpanel" id="panel-decades" aria-labelledby="tab-decades" hidden>
+    <h2 class="lab-h">How much do we like each decade?</h2>
+    <p class="lab-sub">The average rating of every album released in that decade. Faded rows have fewer than 3 albums, so read them with a pinch of salt. Click a decade to see its best albums.</p>
+    <div class="readout" id="decfacts"></div>
+    <div class="chart-box" id="decbox">
+      <div class="dlegend" aria-hidden="true"><span><i class="key n"></i><span class="nm1"></span></span><span><i class="key k"></i><span class="nm2"></span></span></div>
+      <div class="dhead"><span></span><div class="dscale" id="decscale"></div><span></span></div>
+      <div id="decrows"></div>
+      <div class="tip" id="dectip" hidden></div>
+    </div>
+    <details class="tableview"><summary>View as table</summary><div class="tablewrap" id="dectable"></div></details>
+  </section>
+
+  <!-- 3. VS THE CRITICS -->
+  <section class="tabpanel" role="tabpanel" id="panel-critics" aria-labelledby="tab-critics" hidden>
+    <h2 class="lab-h">Us versus <span class="critic-name"></span></h2>
+    <div id="critsetup" hidden></div>
+    <div id="critmain" hidden>
+      <p class="lab-sub">Every dot is an album: the critics’ score runs left to right, ours bottom to top. Above the line we liked it more than they did; below it they liked it more than we did.</p>
+      <div class="pillrow" id="critwho"><span class="lbl">Show</span></div>
+      <div class="readout" id="critfacts"></div>
+      <div class="chart-box" id="critbox"><div class="tip" id="crittip" hidden></div></div>
+      <div id="critsel"><p class="sel-hint">Tap a dot to see the album.</p></div>
+      <div class="glists" id="critlists"></div>
+      <details class="tableview"><summary>View as table</summary><div class="tablewrap" id="crittable"></div></details>
+    </div>
+  </section>
+
+  <!-- 4. GUESS THE SCORE -->
+  <section class="tabpanel" role="tabpanel" id="panel-guess" aria-labelledby="tab-guess" hidden>
+    <h2 class="lab-h">Guess the score</h2>
+    <p class="lab-sub">Five albums. For each one, guess what <span class="nm1"></span> and <span class="nm2"></span> gave it. The closer you are, the more points. Up to 100 per album.</p>
+    <div class="game" id="gamebox"></div>
+  </section>
+
+  <!-- 5. CHEF'S CHOICE -->
+  <section class="tabpanel" role="tabpanel" id="panel-chef" aria-labelledby="tab-chef" hidden>
+    <h2 class="lab-h">Chef’s choice</h2>
+    <p class="lab-sub">Albums that deserve more ears: a first album from someone nobody knew, production that blew us away, a deep cut we can’t shut up about. Hand-picked, not calculated.</p>
+    <div class="pillrow" id="cheftags" hidden><span class="lbl">Filter</span></div>
+    <div id="chefsurprise"></div>
+    <div id="chefshelf"></div>
+    <div id="chefauto"></div>
+  </section>
+
+  <!-- 6. HOT TAKES -->
+  <section class="tabpanel" role="tabpanel" id="panel-takes" aria-labelledby="tab-takes" hidden>
+    <div class="warn" id="takesgate">
+      <div class="big">Do not click this</div>
+      <p>Hot takes ahead. Opinions on hip-hop’s biggest arguments. Friendships have been tested. You have been warned.</p>
+      <button class="btn" id="takesgo">I’m clicking it anyway</button>
+    </div>
+    <div id="takesopen" hidden>
+      <h2 class="lab-h">Hot takes</h2>
+      <p class="lab-sub">The big arguments, settled by two people with a spreadsheet. The “by the numbers” boxes come from our own ratings.</p>
+      <div class="feed" id="feed"></div>
+    </div>
+  </section>
+
+  <footer>
+    Everything here is worked out in your browser from the same spreadsheet as the main page.
+    Album covers come from Apple’s public iTunes Search API and belong to their respective owners.
+  </footer>
+</main>
+
+<script src="xlsx.full.min.js"></script>
+<script src="ratings.js"></script>
+<script>
+/* ---------- helpers for charts ---------- */
+const SVG_NS = "http://www.w3.org/2000/svg";
+function sv(tag, attrs, parent) {                     // build an SVG element
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const k in (attrs || {})) e.setAttribute(k, attrs[k]);
+  if (parent) parent.append(e);
+  return e;
+}
+const mean = list => list.length ? list.reduce((s, x) => s + x, 0) / list.length : null;
+const r2d = n => n == null ? "–" : String(+n.toFixed(2));
+const KEY1 = "var(--s1)", KEY2 = "var(--s2)";
+
+function placeTip(tip, host, ev) {                    // put a tooltip next to the pointer, inside its box
+  const hb = host.getBoundingClientRect();
+  let left = ev.clientX - hb.left + 14, top = ev.clientY - hb.top + 14;
+  tip.hidden = false;
+  if (left + tip.offsetWidth > hb.width - 6) left = ev.clientX - hb.left - tip.offsetWidth - 14;
+  tip.style.left = Math.max(6, left) + "px"; tip.style.top = Math.max(6, top) + "px";
+}
+function tipRow(tip, color, label, value) {            // a tooltip line: short colored stroke, name, value
+  const row = h("div", "row"); const k = h("i"); k.style.background = color;
+  row.append(k, label, h("strong", null, value)); tip.append(row);
+}
+
+/* ---------- 1. TASTE MAP ---------- */
+let mapSel = null, mapHover = -1;
+const mapEligible = () => albums.filter(a => a.r1 != null && a.r2 != null);
+
+function renderMap() {
+  const box = document.getElementById("mapbox"), tip = document.getElementById("maptip");
+  const all = mapEligible();
+  const only2 = document.getElementById("only2").checked;
+  const data = all.filter(a => !only2 || a.diff >= 2);
+  document.getElementById("mapcount").textContent = data.length + " of " + all.length + " albums";
+  box.querySelector("svg")?.remove();
+  if (!all.length) { box.append(h("p", "empty-note", "The map appears once albums have both ratings.")); return; }
+
+  const W = Math.max(290, Math.min(720, box.clientWidth - 24)), H = W;
+  const L = 46, R = 16, T = 16, B = 46, PW = W - L - R, PH = H - T - B;
+  const lo = Math.max(0, Math.floor(Math.min(...all.flatMap(a => [a.r1, a.r2]))) - 1), hi = 10.5;
+  const x = v => L + (v - lo) / (hi - lo) * PW, y = v => T + PH - (v - lo) / (hi - lo) * PH;
+  const svg = sv("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Scatter plot of " + NAME_1 + "’s score against " + NAME_2 + "’s score for each album. A table version follows." }, box);
+
+  for (let t = Math.ceil(lo); t <= 10; t++) {         // hairline grid and tick labels
+    sv("line", { x1: x(t), x2: x(t), y1: T, y2: T + PH, stroke: "#e7e9f1" }, svg);
+    sv("line", { x1: L, x2: L + PW, y1: y(t), y2: y(t), stroke: "#e7e9f1" }, svg);
+    for (const [px, py, anchor] of [[x(t), T + PH + 16, "middle"], [L - 8, y(t) + 4, "end"]]) {
+      const tx = sv("text", { x: px, y: py, "text-anchor": anchor, "font-size": 11, fill: "#5a6080" }, svg); tx.textContent = t;
+    }
+  }
+  sv("line", { x1: x(lo), y1: y(lo), x2: x(hi), y2: y(hi), stroke: "#0b0f2a", "stroke-opacity": .35, "stroke-width": 1.5 }, svg);   // we agree
+  const agree = sv("text", { x: x(hi) - 6, y: y(hi) + 18, "text-anchor": "end", "font-size": 11, fill: "#5a6080", transform: "rotate(-45 " + (x(hi) - 6) + " " + (y(hi) + 18) + ")" }, svg);
+  agree.textContent = "we agree";
+  const halo = { "font-size": 11.5, fill: "#5a6080", stroke: "#fff", "stroke-width": 3, "paint-order": "stroke", "font-weight": 700 };
+  sv("text", { ...halo, x: L + 8, y: T + 18 }, svg).textContent = NAME_2 + " loves it, " + NAME_1 + " doesn’t";
+  sv("text", { ...halo, x: L + PW - 8, y: T + PH - 10, "text-anchor": "end" }, svg).textContent = NAME_1 + " loves it, " + NAME_2 + " doesn’t";
+
+  // axis titles with the same key shapes as the decade chart (circle = Nimbus, diamond = Korin)
+  const cx = L + PW / 2, cy = T + PH / 2;
+  sv("circle", { cx: cx - 52, cy: H - 9, r: 5, fill: "#2a3bff" }, svg);
+  sv("text", { x: cx - 42, y: H - 5, "font-size": 12, "font-weight": 700, fill: "#0b0f2a" }, svg).textContent = NAME_1 + "’s score";
+  sv("rect", { x: 11.5, y: cy - 4 - 52 + 40, width: 9, height: 9, fill: "#e8590c", transform: "rotate(45 16 " + (cy - 52 + 40) + ")" }, svg);
+  sv("text", { x: 0, y: 0, "font-size": 12, "font-weight": 700, fill: "#0b0f2a", transform: "translate(14 " + (cy - 24) + ") rotate(-90)" }, svg).textContent = NAME_2 + "’s score";
+
+  const pts = data.map(a => ({ a, px: x(a.r1), py: y(a.r2) }));
+  for (const p of pts) sv("circle", { cx: p.px, cy: p.py, r: 5, fill: "#0b0f2a", "fill-opacity": .5, stroke: "#fff", "stroke-width": 1.5 }, svg);
+  const ring = sv("circle", { r: 9, fill: "none", stroke: "#2a3bff", "stroke-width": 2.5 }, svg); ring.style.display = "none";
+  const picked = sv("circle", { r: 8, fill: "#f4c430", stroke: "#0b0f2a", "stroke-width": 2 }, svg); picked.style.display = "none";
+  const selPt = mapSel && pts.find(p => p.a === mapSel);
+  if (selPt) { picked.setAttribute("cx", selPt.px); picked.setAttribute("cy", selPt.py); picked.style.display = ""; }
+
+  const hit = sv("rect", { x: 0, y: 0, width: W, height: H, fill: "transparent" }, svg);   // nearest-point hit layer (dots are small, so we find the closest one)
+  const nearest = ev => {
+    const r = svg.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    let best = null, bd = 28 * 28;
+    for (const p of pts) { const d = (p.px - mx) ** 2 + (p.py - my) ** 2; if (d < bd) { bd = d; best = p; } }
+    return best;
+  };
+  hit.addEventListener("pointermove", ev => {
+    const p = nearest(ev);
+    if (!p) { ring.style.display = "none"; tip.hidden = true; return; }
+    ring.setAttribute("cx", p.px); ring.setAttribute("cy", p.py); ring.style.display = "";
+    tip.replaceChildren(h("small", null, p.a.artist), h("b", null, p.a.title));
+    tipRow(tip, KEY1, NAME_1, fmt(p.a.r1)); tipRow(tip, KEY2, NAME_2, fmt(p.a.r2));
+    tip.append(h("small", null, "Click to open"));
+    placeTip(tip, box, ev);
+  });
+  hit.addEventListener("pointerleave", () => { ring.style.display = "none"; tip.hidden = true; });
+  hit.addEventListener("click", ev => { const p = nearest(ev); if (p) selectMap(p.a); });
+
+  document.getElementById("maptable").replaceChildren(mapTable(data));
+}
+function albumCard(a, extra) {                        // the compact album card (cover, titles, both scores, links)
+  const row = h("article", "album compact");
+  const info = h("div", "info");
+  info.append(h("div", "meta", [a.year, a.by && "picked by " + a.by].filter(Boolean).join(" / ")), h("div", "title", a.title), h("div", "artist", a.artist));
+  const r = extra || remark(a); if (r) info.append(h("div", "remark", r));
+  const actions = h("div", "actions"); actions.append(spotifyLink(a));
+  const open = h("a", "spotify", "Show in the full list →"); open.href = "index.html?album=" + encodeURIComponent(albumKey(a));
+  actions.append(open); info.append(actions);
+  const scores = h("div", "scores"); scores.append(scoreBox(NAME_1, a.r1, a.fav[0]), scoreBox(NAME_2, a.r2, a.fav[1]));
+  row.append(makeCover(a, ioTop), info, scores);
+  return row;
+}
+function selectMap(a) {
+  mapSel = a;
+  document.getElementById("mapsel").replaceChildren(albumCard(a));
+  renderMap();
+}
+function mapTable(data) {
+  const table = h("table"), head = h("tr");
+  for (const t of ["Album", "Artist", NAME_1, NAME_2, "Gap"]) head.append(h("th", null, t));
+  table.append(head);
+  for (const a of [...data].sort((p, q) => q.diff - p.diff)) {
+    const tr = h("tr"), td = h("td"), b = h("button", null, a.title);
+    b.addEventListener("click", () => { selectMap(a); document.getElementById("mapsel").scrollIntoView({ behavior: "smooth", block: "center" }); });
+    td.append(b); tr.append(td, h("td", null, a.artist), h("td", "n", fmt(a.r1)), h("td", "n", fmt(a.r2)), h("td", "n", fmt(a.diff)));
+    table.append(tr);
+  }
+  return table;
+}
+function mapFacts() {
+  const all = mapEligible(); const f = [];
+  if (all.length >= 3) {
+    f.push([Math.round(100 * all.filter(a => a.diff <= 1).length / all.length) + "%", "of albums within 1 point of each other"]);
+    f.push([r2d(mean(all.map(a => a.diff))), "average gap between our scores"]);
+    const gen = mean(all.map(a => a.r2 - a.r1));
+    if (Math.abs(gen) >= 0.05) f.push([(gen > 0 ? NAME_2 : NAME_1), "is the more generous rater, by " + r2d(Math.abs(gen)) + " points on average"]);
+  }
+  document.getElementById("mapfacts").replaceChildren(...f.map(([big, small]) => { const d = h("div", "stat"); d.append(h("b", String(big).length > 8 ? "long" : null, big), h("small", null, small)); return d; }));
+}
+
+/* ---------- 2. DECADES ---------- */
+function decadeRows() {
+  const by = new Map();
+  for (const a of albums) if (a.year != null && a.avg != null) { const d = Math.floor(a.year / 10) * 10; if (!by.has(d)) by.set(d, []); by.get(d).push(a); }
+  return [...by].sort((p, q) => p[0] - q[0]).map(([d, list]) => ({
+    d, list, n: list.length,
+    m1: mean(list.map(a => a.r1).filter(v => v != null)), m2: mean(list.map(a => a.r2).filter(v => v != null)), m: mean(list.map(a => a.avg)),
+  }));
+}
+function renderDecades() {
+  const rows = decadeRows(), host = document.getElementById("decrows"), tip = document.getElementById("dectip"), box = document.getElementById("decbox");
+  host.replaceChildren(); document.getElementById("decscale").replaceChildren();
+  if (!rows.length) { host.append(h("p", "empty-note", "This chart needs a Year column and some ratings.")); return; }
+  const lo = Math.max(0, Math.floor(Math.min(...rows.flatMap(r => [r.m1, r.m2].filter(v => v != null)))) - 1), hi = 10;
+  const pos = v => ((v - lo) / (hi - lo) * 100);
+  for (let t = lo; t <= hi; t++) { const s = h("span", null, String(t)); s.style.left = pos(t) + "%"; document.getElementById("decscale").append(s); }
+
+  for (const r of rows) {
+    const wrap = h("div");
+    const b = h("button", "drow" + (r.n < 3 ? " few" : ""));
+    b.setAttribute("aria-expanded", "false");
+    const label = h("div", "dlabel"); label.append(h("b", null, r.d + "s"), h("small", null, r.n + (r.n === 1 ? " album" : " albums")));
+    const track = h("div", "dtrack");
+    for (let t = lo; t <= hi; t++) { const g = h("i", "dgrid"); g.style.left = pos(t) + "%"; track.append(g); }
+    if (r.m1 != null && r.m2 != null) { const l = h("i", "dlink"); l.style.left = pos(Math.min(r.m1, r.m2)) + "%"; l.style.width = Math.abs(pos(r.m1) - pos(r.m2)) + "%"; track.append(l); }
+    for (const [cls, v, name, color] of [["n", r.m1, NAME_1, KEY1], ["k", r.m2, NAME_2, KEY2]]) {
+      if (v == null) continue;
+      const dot = h("i", "dot " + cls); dot.style.left = pos(v) + "%";
+      dot.addEventListener("pointerenter", ev => { tip.replaceChildren(h("small", null, r.d + "s, " + r.n + " albums")); tipRow(tip, color, name, r2d(v)); placeTip(tip, box, ev); });
+      dot.addEventListener("pointermove", ev => placeTip(tip, box, ev));
+      dot.addEventListener("pointerleave", () => { tip.hidden = true; });
+      track.append(dot);
+    }
+    const vals = h("div", "dvals"); vals.append(h("span", null, NAME_1 + " " + r2d(r.m1)), h("span", null, NAME_2 + " " + r2d(r.m2)));
+    b.append(label, track, vals);
+
+    const top = h("div", "dtop"); top.hidden = true;
+    b.addEventListener("click", () => {
+      const open = top.hidden;
+      if (open && !top.childElementCount) {
+        top.append(h("h4", null, "Best of the " + r.d + "s"));
+        for (const a of [...r.list].sort((p, q) => q.avg - p.avg).slice(0, 5)) {
+          const link = h("a"); link.href = "index.html?album=" + encodeURIComponent(albumKey(a));
+          link.append(h("em", null, r2d(a.avg)), h("b", null, a.title), h("br"), h("span", null, a.artist + (a.year ? " / " + a.year : "")));
+          top.append(link);
+        }
+      }
+      top.hidden = !open; b.setAttribute("aria-expanded", String(open));
+    });
+    wrap.append(b, top); host.append(wrap);
+  }
+
+  const solid = rows.filter(r => r.n >= 3 && r.m1 != null && r.m2 != null), f = [];
+  if (solid.length >= 2) {
+    const best = key => solid.reduce((p, q) => q[key] > p[key] ? q : p);
+    const b1 = best("m1"), b2 = best("m2"), gap = solid.reduce((p, q) => Math.abs(q.m1 - q.m2) > Math.abs(p.m1 - p.m2) ? q : p);
+    f.push([b1.d + "s", NAME_1 + "’s favorite decade (" + r2d(b1.m1) + ")"]);
+    f.push([b2.d + "s", NAME_2 + "’s favorite decade (" + r2d(b2.m2) + ")"]);
+    f.push([gap.d + "s", "the decade we disagree on most (" + r2d(Math.abs(gap.m1 - gap.m2)) + " points apart)"]);
+  }
+  document.getElementById("decfacts").replaceChildren(...f.map(([big, small]) => { const d = h("div", "stat"); d.append(h("b", null, big), h("small", null, small)); return d; }));
+
+  const table = h("table"), head = h("tr");
+  for (const t of ["Decade", "Albums", NAME_1, NAME_2, "Both"]) head.append(h("th", null, t));
+  table.append(head);
+  for (const r of rows) { const tr = h("tr"); tr.append(h("td", null, r.d + "s"), h("td", "n", String(r.n)), h("td", "n", r2d(r.m1)), h("td", "n", r2d(r.m2)), h("td", "n", r2d(r.m))); table.append(tr); }
+  document.getElementById("dectable").replaceChildren(table);
+}
+
+/* ---------- 3. GUESS THE SCORE ---------- */
+const ROUNDS = 5, POINTS_PER_GUESS = 50, FULL_MARKS_WITHIN = 3;   // a guess earns points if it is within 3 points of the real score
+let G = null;
+const guessPoints = err => Math.round(Math.max(0, 1 - err / FULL_MARKS_WITHIN) * POINTS_PER_GUESS);
+function shuffle(list) { const a = [...list]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function bestScore(set) { try { if (set != null) localStorage.setItem("guessBest.v1", String(set)); return +(localStorage.getItem("guessBest.v1") || 0); } catch (e) { return 0; } }
+
+function startGame() {
+  const pool = mapEligible();
+  G = { picks: shuffle(pool).slice(0, ROUNDS), i: 0, total: 0, log: [], phase: "guess", g1: 7.5, g2: 7.5 };
+  renderGame();
+}
+const guessText = n => n === 10 ? "Jimmey" : n.toFixed(1);   // a guess of 10 is called Jimmey, like everywhere else
+function sliderBox(name, key) {
+  const wrap = h("div", "slider"), id = "g-" + key;
+  const label = h("label", null, name + " gave it…"); label.htmlFor = id;
+  const val = h("div", "gval"), out = h("output", "gv"), chip = h("span", "gg");
+  out.htmlFor = id; val.append(out, chip);
+  const paint = () => {                               // the value box has a fixed size, so nothing jumps while you slide
+    const n = G[key], g = grade(n);
+    out.textContent = guessText(n); out.className = "gv" + (n === 10 ? " jim" : "");
+    chip.textContent = g; chip.className = "gg g-" + g;
+  };
+  const input = h("input"); input.type = "range"; input.id = id; input.min = 0; input.max = 10; input.step = 0.1; input.value = G[key];
+  input.addEventListener("input", () => { G[key] = +input.value; paint(); });
+  paint();
+  const ends = h("div", "ends"); ends.append(h("span", null, "0"), h("span", null, "Jimmey"));
+  wrap.append(label, val, input, ends);
+  return wrap;
+}
+function renderGame() {
+  const box = document.getElementById("gamebox");
+  box.replaceChildren();
+  if (!G.picks.length) { box.append(h("p", "empty-note", "The game needs a few albums with both ratings.")); return; }
+  if (G.i >= G.picks.length) { renderFinal(box); return; }
+  const a = G.picks[G.i];
+
+  const top = h("div", "g-top");
+  top.append(h("span", null, "Album " + (G.i + 1) + " of " + G.picks.length), h("span", null, "Your score: " + G.total));
+  box.append(top);
+
+  const main = h("div", "g-main"), info = h("div");
+  info.append(h("div", "meta", [a.year, a.genres.length && a.genres.join(", "), a.by && "picked by " + a.by].filter(Boolean).join(" / ")),
+              h("div", "title", a.title), h("div", "artist", a.artist));
+  const links = h("div", "actions"); links.append(spotifyLink(a)); info.append(links);
+
+  if (G.phase === "guess") {
+    const sl = h("div", "g-sliders"); sl.append(sliderBox(NAME_1, "g1"), sliderBox(NAME_2, "g2")); info.append(sl);
+    const act = h("div", "g-actions"), go = h("button", "btn", "Lock it in");
+    go.addEventListener("click", () => {
+      const e1 = Math.abs(G.g1 - a.r1), e2 = Math.abs(G.g2 - a.r2), p1 = guessPoints(e1), p2 = guessPoints(e2);
+      G.total += p1 + p2; G.log.push({ a, g1: G.g1, g2: G.g2, e1, e2, p1, p2 }); G.phase = "reveal"; renderGame();
+    });
+    act.append(go); info.append(act);
+  } else {
+    const L = G.log[G.log.length - 1], res = h("div", "g-result");
+    for (const [name, guess, real, err, pts, fav] of [[NAME_1, L.g1, a.r1, L.e1, L.p1, a.fav[0]], [NAME_2, L.g2, a.r2, L.e2, L.p2, a.fav[1]]]) {
+      const card = h("div", "g-res"), line = h("div", "line"), txt = h("div", "txt");
+      txt.append(h("b", null, err < 0.05 ? "Spot on!" : "Off by " + r2d(err)), h("span", null, "You said " + guessText(guess)), h("br"), h("span", "g-pts", "+" + pts + " points"));
+      line.append(scoreBox(name, real, fav), txt);
+      card.append(h("div", "who", name), line); res.append(card);
+    }
+    info.append(res);
+    const r = remark(a); if (r) info.append(h("div", "remark g-remark", r));
+    const act = h("div", "g-actions"), next = h("button", "btn", G.i + 1 >= G.picks.length ? "See my result" : "Next album");
+    next.addEventListener("click", () => { G.i++; G.phase = "guess"; G.g1 = G.g2 = 7.5; renderGame(); });
+    act.append(next); info.append(act);
+  }
+  main.append(makeCover(a, ioTop), info); box.append(main);
+}
+function renderFinal(box) {
+  const max = G.picks.length * POINTS_PER_GUESS * 2, pct = G.total / max;
+  const prev = bestScore(); if (Math.round(pct * 100) > prev) bestScore(Math.round(pct * 100));
+  const rank = pct >= .8 ? "You basically are one of us." : pct >= .6 ? "You know our taste." : pct >= .4 ? "Not bad. Listen to more albums with us." : "Did you even read our ratings?";
+  const fin = h("div", "g-final");
+  fin.append(h("div", "big", G.total + " / " + max), h("h3", null, rank), h("p", null, "Your best so far: " + Math.max(prev, Math.round(pct * 100)) + "% of the points"));
+  box.append(fin);
+  const table = h("table"), head = h("tr");
+  for (const t of ["Album", NAME_1 + " (you / real)", NAME_2 + " (you / real)", "Points"]) head.append(h("th", null, t));
+  table.append(head);
+  for (const L of G.log) {
+    const tr = h("tr"); tr.append(h("td", null, L.a.title + " – " + L.a.artist), h("td", "n", guessText(L.g1) + " / " + guessText(L.a.r1)), h("td", "n", guessText(L.g2) + " / " + guessText(L.a.r2)), h("td", "n", String(L.p1 + L.p2)));
+    table.append(tr);
+  }
+  const wrap = h("div", "tablewrap"); wrap.append(table); box.append(wrap);
+  const act = h("div", "g-actions"), again = h("button", "btn", "Play again");
+  again.addEventListener("click", startGame); act.append(again); box.append(act);
+}
+
+/* ---------- 3b. VS THE CRITICS ---------- */
+/* Needs an optional "Critic Score" column in the Excel file (0-10 or 0-100). The name shown comes from CRITIC_SOURCE in ratings.js. */
+let critSel = null, critWho = "avg";
+const critAll = () => albums.filter(a => a.critic != null && a.avg != null);
+const critY = a => critWho === "r1" ? a.r1 : critWho === "r2" ? a.r2 : a.avg;
+const critRows = () => critAll().filter(a => critY(a) != null);
+function pearson(xs, ys) {
+  const mx = mean(xs), my = mean(ys); let sxy = 0, sxx = 0, syy = 0;
+  xs.forEach((x, i) => { const dx = x - mx, dy = ys[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; });
+  return sxx && syy ? sxy / Math.sqrt(sxx * syy) : null;
+}
+function setupCritics() {
+  const who = document.getElementById("critwho");
+  if (who.dataset.built) return; who.dataset.built = "1";
+  for (const [k, label] of [["avg", "Both of us"], ["r1", NAME_1], ["r2", NAME_2]]) {
+    const b = h("button", "pillbtn", label); b.dataset.k = k; b.type = "button";
+    b.addEventListener("click", () => { critWho = k; critSel = null; document.getElementById("critsel").replaceChildren(h("p", "sel-hint", "Tap a dot to see the album.")); renderCritics(); });
+    who.append(b);
+  }
+}
+function renderCritics() {
+  const setup = document.getElementById("critsetup"), main = document.getElementById("critmain");
+  const total = critAll().length;
+  if (total < 1) {
+    main.hidden = true; setup.hidden = false;
+    const c = h("div", "callout");
+    c.append(h("h3", null, "Not set up yet"));
+    c.append(h("p", null, "This tab compares our scores with " + CRITIC_SOURCE + "’s. It needs one extra column in your Excel file:"));
+    const ol = h("ol");
+    for (const t of ["Add a column named Critic Score (next to the other columns).", "For each album, type the critic score: 7.8 works, and so does 78 (anything above 10 is read as out of 100).", "Save, push, done. Rows without a score are simply skipped. The name above (" + CRITIC_SOURCE + ") can be changed in ratings.js."]) ol.append(h("li", null, t));
+    c.append(ol); setup.replaceChildren(c); return;
+  }
+  setup.hidden = true; main.hidden = false;
+  setupCritics();
+  document.querySelectorAll("#critwho .pillbtn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === critWho)));
+  const data = critRows(), box = document.getElementById("critbox"), tip = document.getElementById("crittip");
+  const yName = critWho === "avg" ? "Our average" : critWho === "r1" ? NAME_1 + "’s score" : NAME_2 + "’s score";
+
+  // facts
+  const f = [], gap = a => critY(a) - a.critic;
+  f.push([total + " albums", "have a " + CRITIC_SOURCE + " score" + (total < 8 ? ". Add more for sharper results." : "")]);
+  const mg = mean(data.map(gap));
+  if (data.length >= 3) {
+    const who = critWho === "avg" ? "we rate" : (critWho === "r1" ? NAME_1 : NAME_2) + " rates";
+    f.push([(mg >= 0 ? "+" : "−") + r2d(Math.abs(mg)), Math.abs(mg) < .05 ? who + " right at " + CRITIC_SOURCE + "’s level on average" : who + " " + (mg > 0 ? "higher" : "lower") + " than " + CRITIC_SOURCE + " on average"]);
+  }
+  const both = critAll().filter(a => a.r1 != null && a.r2 != null);
+  if (both.length >= 3) {
+    const d1 = mean(both.map(a => Math.abs(a.r1 - a.critic))), d2 = mean(both.map(a => Math.abs(a.r2 - a.critic)));
+    if (Math.abs(d1 - d2) >= .05) f.push([d1 < d2 ? NAME_1 : NAME_2, "is closer to " + CRITIC_SOURCE + " (average gap " + r2d(Math.min(d1, d2)) + " vs " + r2d(Math.max(d1, d2)) + ")"]);
+  }
+  if (data.length >= 8) {
+    const r = pearson(data.map(a => a.critic), data.map(critY));
+    if (r != null) f.push([r2d(r), r >= .7 ? "we mostly agree with " + CRITIC_SOURCE + " (1 = always)" : r >= .4 ? "we loosely follow " + CRITIC_SOURCE + " (1 = always)" : "we’re on our own planet (1 = always agree, 0 = no link)"]);
+  }
+  document.getElementById("critfacts").replaceChildren(...f.map(([big, small]) => { const d = h("div", "stat"); d.append(h("b", String(big).length > 8 ? "long" : null, big), h("small", null, small)); return d; }));
+
+  // chart
+  box.querySelector("svg")?.remove();
+  const W = Math.max(290, Math.min(720, box.clientWidth - 24)), H = W;
+  const L = 46, R = 16, T = 16, B = 46, PW = W - L - R, PH = H - T - B;
+  const lo = Math.max(0, Math.floor(Math.min(...data.flatMap(a => [a.critic, critY(a)]))) - 1), hi = 10.5;
+  const x = v => L + (v - lo) / (hi - lo) * PW, y = v => T + PH - (v - lo) / (hi - lo) * PH;
+  const svg = sv("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Scatter plot of " + CRITIC_SOURCE + "’s score against our score for each album. A table version follows." }, box);
+  for (let t = Math.ceil(lo); t <= 10; t++) {
+    sv("line", { x1: x(t), x2: x(t), y1: T, y2: T + PH, stroke: "#e7e9f1" }, svg);
+    sv("line", { x1: L, x2: L + PW, y1: y(t), y2: y(t), stroke: "#e7e9f1" }, svg);
+    for (const [px, py, anchor] of [[x(t), T + PH + 16, "middle"], [L - 8, y(t) + 4, "end"]]) sv("text", { x: px, y: py, "text-anchor": anchor, "font-size": 11, fill: "#5a6080" }, svg).textContent = t;
+  }
+  sv("line", { x1: x(lo), y1: y(lo), x2: x(hi), y2: y(hi), stroke: "#0b0f2a", "stroke-opacity": .35, "stroke-width": 1.5 }, svg);
+  sv("text", { x: x(hi) - 6, y: y(hi) + 18, "text-anchor": "end", "font-size": 11, fill: "#5a6080", transform: "rotate(-45 " + (x(hi) - 6) + " " + (y(hi) + 18) + ")" }, svg).textContent = "same as the critics";
+  const halo = { "font-size": 11.5, fill: "#5a6080", stroke: "#fff", "stroke-width": 3, "paint-order": "stroke", "font-weight": 700 };
+  sv("text", { ...halo, x: L + 8, y: T + 18 }, svg).textContent = "We liked it more";
+  sv("text", { ...halo, x: L + PW - 8, y: T + PH - 10, "text-anchor": "end" }, svg).textContent = "Critics liked it more";
+  sv("text", { x: L + PW / 2, y: H - 5, "text-anchor": "middle", "font-size": 12, "font-weight": 700, fill: "#0b0f2a" }, svg).textContent = CRITIC_SOURCE + " score";
+  sv("text", { x: 0, y: 0, "font-size": 12, "font-weight": 700, fill: "#0b0f2a", "text-anchor": "middle", transform: "translate(13 " + (T + PH / 2) + ") rotate(-90)" }, svg).textContent = yName;
+
+  const mark = (px, py, extra) => critWho === "r2"
+    ? sv("rect", { x: px - 4.6, y: py - 4.6, width: 9.2, height: 9.2, fill: "#e8590c", stroke: "#fff", "stroke-width": 1.5, transform: "rotate(45 " + px + " " + py + ")", ...extra }, svg)
+    : sv("circle", { cx: px, cy: py, r: 5, fill: critWho === "r1" ? "#2a3bff" : "#0b0f2a", "fill-opacity": critWho === "r1" ? 1 : .5, stroke: "#fff", "stroke-width": 1.5, ...extra }, svg);
+  const pts = data.map(a => ({ a, px: x(a.critic), py: y(critY(a)) }));
+  pts.forEach(p => mark(p.px, p.py));
+  const ring = sv("circle", { r: 9, fill: "none", stroke: "#2a3bff", "stroke-width": 2.5 }, svg); ring.style.display = "none";
+  const picked = sv("circle", { r: 8, fill: "#f4c430", stroke: "#0b0f2a", "stroke-width": 2 }, svg); picked.style.display = "none";
+  const sp = critSel && pts.find(p => p.a === critSel);
+  if (sp) { picked.setAttribute("cx", sp.px); picked.setAttribute("cy", sp.py); picked.style.display = ""; }
+  const hit = sv("rect", { x: 0, y: 0, width: W, height: H, fill: "transparent" }, svg);
+  const nearest = ev => { const r = svg.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top; let best = null, bd = 28 * 28; for (const p of pts) { const d = (p.px - mx) ** 2 + (p.py - my) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
+  hit.addEventListener("pointermove", ev => {
+    const p = nearest(ev);
+    if (!p) { ring.style.display = "none"; tip.hidden = true; return; }
+    ring.setAttribute("cx", p.px); ring.setAttribute("cy", p.py); ring.style.display = "";
+    tip.replaceChildren(h("small", null, p.a.artist), h("b", null, p.a.title));
+    tipRow(tip, "#5a6080", CRITIC_SOURCE, fmt(p.a.critic)); tipRow(tip, critWho === "r2" ? KEY2 : critWho === "r1" ? KEY1 : "#0b0f2a", yName, fmt(critY(p.a)));
+    tip.append(h("small", null, "Click to open")); placeTip(tip, box, ev);
+  });
+  hit.addEventListener("pointerleave", () => { ring.style.display = "none"; tip.hidden = true; });
+  hit.addEventListener("click", ev => { const p = nearest(ev); if (p) selectCritic(p.a); });
+
+  // the two lists
+  const lists = document.getElementById("critlists"); lists.replaceChildren();
+  const make = (title, hint, arr, sign) => {
+    const col = h("div"); col.append(h("h3", null, title), h("p", "hint", hint));
+    if (!arr.length) col.append(h("p", "hint", "Nothing that far apart (1+ points) yet."));
+    for (const a of arr) {
+      const link = h("a"); link.href = "index.html?album=" + encodeURIComponent(albumKey(a));
+      link.append(h("em", null, (gap(a) > 0 ? "+" : "−") + r2d(Math.abs(gap(a)))), h("b", null, a.title), h("br"), h("span", null, a.artist + " · " + CRITIC_SOURCE + " " + fmt(a.critic) + " · " + yName.toLowerCase() + " " + fmt(critY(a))));
+      col.append(link);
+    }
+    return col;
+  };
+  const sorted = [...data].sort((p, q) => gap(q) - gap(p));
+  lists.append(make("Hidden gems", "We liked these a lot more than " + CRITIC_SOURCE + " did.", sorted.filter(a => gap(a) >= 1).slice(0, 5), 1),
+               make("Critics’ darlings", "We liked these a lot less than " + CRITIC_SOURCE + " did.", sorted.slice().reverse().filter(a => gap(a) <= -1).slice(0, 5), -1));
+
+  // table
+  const table = h("table"), head = h("tr");
+  for (const t of ["Album", "Artist", CRITIC_SOURCE, NAME_1, NAME_2, "Gap"]) head.append(h("th", null, t));
+  table.append(head);
+  for (const a of [...data].sort((p, q) => Math.abs(gap(q)) - Math.abs(gap(p)))) {
+    const tr = h("tr"), td = h("td"), b = h("button", null, a.title);
+    b.addEventListener("click", () => { selectCritic(a); document.getElementById("critsel").scrollIntoView({ behavior: "smooth", block: "center" }); });
+    td.append(b); tr.append(td, h("td", null, a.artist), h("td", "n", fmt(a.critic)), h("td", "n", fmt(a.r1)), h("td", "n", fmt(a.r2)), h("td", "n", (gap(a) > 0 ? "+" : "") + r2d(gap(a))));
+    table.append(tr);
+  }
+  document.getElementById("crittable").replaceChildren(table);
+}
+function selectCritic(a) {
+  critSel = a;
+  const g = critY(a) - a.critic;
+  const text = Math.abs(g) < .5 ? CRITIC_SOURCE + " and us are on the same page." : g > 0 ? "We liked it " + r2d(g) + " points more than " + CRITIC_SOURCE + "." : CRITIC_SOURCE + " liked it " + r2d(-g) + " points more than we did.";
+  document.getElementById("critsel").replaceChildren(albumCard(a, text));
+  renderCritics();
+}
+
+/* ---------- 5. CHEF'S CHOICE ---------- */
+/* Hand-picked in the Excel file, column "Chef's Choice". Write a short note on the albums you want to push.
+   Optional tags go in square brackets in front of the note, e.g.   [Debut, Production] A kid nobody knew. Listen to the drums.
+   (tags become filter buttons; they can be anything: Debut, Production, Deep cut, Underrated, Late night...) */
+let chefTag = "", chefCurrent = null;
+const chefPicks = () => albums.filter(a => a.recPick).sort((p, q) => ((q.date ?? -Infinity) - (p.date ?? -Infinity)) || (q.row - p.row));
+const chips = tags => { const d = h("div", "chips"); tags.forEach(t => d.append(h("span", "chip", t))); return d; };
+function shelfCard(a, note, tags) {
+  const c = h("a", "shelf-card"); c.href = "index.html?album=" + encodeURIComponent(albumKey(a));
+  c.append(makeCover(a, ioTop), h("b", null, a.title), h("small", null, a.artist + (a.year ? " · " + a.year : "")));
+  if (tags && tags.length) c.append(chips(tags));
+  if (note) c.append(h("p", "note", note));
+  c.append(h("div", "sc", NAME_1 + " " + fmt(a.r1) + " / " + NAME_2 + " " + fmt(a.r2) + (a.critic != null ? " · " + CRITIC_SOURCE + " " + fmt(a.critic) : "")));
+  return c;
+}
+function renderChef() {
+  const picks = chefPicks(), pills = document.getElementById("cheftags"), shelf = document.getElementById("chefshelf"), sur = document.getElementById("chefsurprise"), auto = document.getElementById("chefauto");
+  // tag buttons (case-insensitive, built from whatever you typed)
+  const tags = new Map(); picks.forEach(a => a.recTags.forEach(t => { const k = fold(t); if (!tags.has(k)) tags.set(k, { label: t, n: 0 }); tags.get(k).n++; }));
+  if (chefTag && !tags.has(chefTag)) chefTag = "";
+  pills.hidden = tags.size === 0;
+  pills.replaceChildren(pills.firstElementChild || h("span", "lbl", "Filter"));
+  if (tags.size) for (const [k, label] of [["", "All"], ...[...tags].sort((p, q) => q[1].n - p[1].n).map(([k, v]) => [k, v.label])]) {
+    const b = h("button", "pillbtn", label); b.type = "button"; b.setAttribute("aria-pressed", String(k === chefTag));
+    b.addEventListener("click", () => { chefTag = k; chefCurrent = null; renderChef(); }); pills.append(b);
+  }
+  const shown = picks.filter(a => !chefTag || a.recTags.some(t => fold(t) === chefTag));
+
+  shelf.replaceChildren(); sur.replaceChildren();
+  if (!picks.length) {
+    const c = h("div", "callout");
+    c.append(h("h3", null, "The shelf is still empty"), h("p", null, "This page is filled by hand, straight from the Excel file:"));
+    const ol = h("ol");
+    for (const t of ["Add a column named Chef’s Choice.", "On any album you want to push, write why in a sentence: “first album from a guy nobody knew”, “the drums are unreal”…", "Optional: put tags in square brackets in front, like [Debut, Production] The drums are unreal. Tags become filter buttons."]) ol.append(h("li", null, t));
+    c.append(ol); shelf.append(c);
+  } else {
+    const row = h("div", "g-actions"), btn = h("button", "btn", chefCurrent ? "Another one" : "Surprise me"); btn.type = "button";
+    btn.addEventListener("click", () => {
+      let pick = shown[Math.floor(Math.random() * shown.length)];
+      if (shown.length > 1) while (pick === chefCurrent) pick = shown[Math.floor(Math.random() * shown.length)];
+      chefCurrent = pick; drawSurprise(); btn.textContent = "Another one";
+    });
+    row.append(btn); sur.append(row);
+    const holder = h("div", "rec-card"); holder.id = "chefcard"; sur.append(holder);
+    function drawSurprise() {
+      const a = chefCurrent; if (!a) return;
+      const w = h("div"); w.append(albumCard(a, a.rec || "Chef’s choice"));
+      if (a.recTags.length) w.append(chips(a.recTags));
+      holder.replaceChildren(w);
+    }
+    drawSurprise();
+    shelf.append(h("h3", "sec-h", shown.length + (shown.length === 1 ? " pick" : " picks")));
+    const grid = h("div", "shelf"); shown.forEach(a => grid.append(shelfCard(a, a.rec, a.recTags))); shelf.append(grid);
+  }
+
+  // automatic extra: only if the Excel file has critic scores
+  auto.replaceChildren();
+  const gems = critAll().filter(a => !a.recPick && a.avg - a.critic >= 1.5).sort((p, q) => (q.avg - q.critic) - (p.avg - p.critic)).slice(0, 6);
+  if (gems.length) {
+    auto.append(h("h3", "sec-h", "Underrated by the numbers"), h("p", "lab-sub", "No hand-picking here: these are the albums we liked at least 1.5 points more than " + CRITIC_SOURCE + " did."));
+    const grid = h("div", "shelf"); gems.forEach(a => grid.append(shelfCard(a))); auto.append(grid);
+  }
+}
+
+/* ---------- 6. HOT TAKES ("Don't click this") ---------- */
+/* Add your own arguments and takes here. Each entry compares two sides.
+     artist("Drake")                      an artist (give several spellings in a list: artist(["Tupac", "2Pac"]))
+     era("Before 2000", a => a.year < 2000)  anything you can test on an album
+   takes: [ { by: "Nimbus", text: "Your take here." }, { by: "Korin", text: "Their take here." } ]
+   The "by the numbers" box is worked out from the ratings in the Excel file automatically. */
+const artistHas = (a, names) => [].concat(names).some(n => (" " + nk(a.artist) + " ").includes(" " + nk(n) + " "));
+const artist = names => ({ label: [].concat(names)[0], match: a => artistHas(a, names) });
+const era = (label, test) => ({ label, match: test });
+const TAKES = [
+  { a: artist("Drake"), b: artist("Kendrick Lamar"), takes: [
+    // { by: "Nimbus", text: "Write your take here." },
+    // { by: "Korin", text: "Write your take here." },
+  ] },
+  { a: artist("Jay-Z"), b: artist("Nas"), takes: [] },
+  { a: artist(["Tupac", "2Pac"]), b: artist(["The Notorious B.I.G.", "Biggie"]), takes: [] },
+  { a: artist("Kanye West"), b: artist("Jay-Z"), takes: [] },
+  { a: era("Before 2000", a => a.year != null && a.year < 2000), b: era("2000 and later", a => a.year != null && a.year >= 2000), takes: [] },
+];
+function numbersBox(d) {
+  const A = albums.filter(d.a.match), B = albums.filter(d.b.match);
+  if (!A.length || !B.length) return null;
+  const box = h("div", "bynum"); box.append(h("b", null, "By the numbers"));
+  const leans = [];
+  for (const [name, key] of [[NAME_1, "r1"], [NAME_2, "r2"]]) {
+    const ma = mean(A.map(x => x[key]).filter(v => v != null)), mb = mean(B.map(x => x[key]).filter(v => v != null));
+    if (ma == null || mb == null) continue;
+    const lean = Math.abs(ma - mb) < .05 ? "" : ma > mb ? d.a.label : d.b.label; leans.push(lean);
+    box.append(h("div", null, name + ": " + d.a.label + " " + r2d(ma) + " vs " + d.b.label + " " + r2d(mb) + (lean ? " → " + lean : " → dead heat")));
+  }
+  box.append(h("div", null, d.a.label + ": " + A.length + (A.length === 1 ? " album" : " albums") + " · " + d.b.label + ": " + B.length + (B.length === 1 ? " album" : " albums") + (Math.min(A.length, B.length) < 3 ? " (tiny sample, don’t quote us)" : "")));
+  if (leans.length === 2) box.append(h("div", "verdict", leans[0] && leans[0] === leans[1] ? "The spreadsheet is unanimous: " + leans[0] + "." : "Split decision. This one stays open."));
+  return box;
+}
+function renderTakes() {
+  const feed = document.getElementById("feed"); feed.replaceChildren();
+  for (const d of TAKES) {
+    const post = h("article", "post dilemma"), vs = h("div", "vs");
+    vs.append(d.a.label, h("i", null, "vs"), d.b.label); post.append(vs);
+    if (d.takes.length) for (const t of d.takes) {
+      const first = fold(t.by) === fold(NAME_1), row = h("div", "take"), body = h("div");
+      body.append(h("div", "who", t.by), h("p", null, t.text));
+      row.append(h("div", "avatar " + (first ? "n" : "k"), (t.by || "?")[0].toUpperCase()), body);
+      post.append(row);
+    } else post.append(h("p", "notake", "No take filed yet. Suspicious. Someone has to pick a side."));
+    const nb = numbersBox(d); if (nb) post.append(nb);
+    feed.append(post);
+  }
+}
+document.getElementById("takesgo").addEventListener("click", () => {
+  document.getElementById("takesgate").hidden = true; document.getElementById("takesopen").hidden = false; renderTakes();
+});
+
+/* ---------- tabs ---------- */
+const TABS = ["map", "decades", "critics", "guess", "chef", "takes"], drawn = {};
+const DRAW = { map: () => { mapFacts(); renderMap(); }, decades: renderDecades, critics: renderCritics, guess: startGame, chef: renderChef, takes: () => {} };
+function showTab(name, push) {
+  if (!TABS.includes(name)) name = "map";
+  for (const t of TABS) {
+    document.getElementById("tab-" + t).setAttribute("aria-selected", String(t === name));
+    document.getElementById("panel-" + t).hidden = t !== name;
+  }
+  if (!drawn[name]) { drawn[name] = true; DRAW[name](); }
+  else if (name === "map") renderMap();                  // the charts need the real width again
+  else if (name === "critics") renderCritics();
+  if (push) history.replaceState(null, "", "#" + name);
+}
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab, true)));
+window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+document.getElementById("only2").addEventListener("change", renderMap);
+let resizeTimer; window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (!document.getElementById("panel-map").hidden && drawn.map) renderMap(); if (!document.getElementById("panel-critics").hidden && drawn.critics) renderCritics(); }, 120); });
+
+loadAll().then(() => {
+  document.querySelectorAll(".js-total").forEach(el => el.textContent = albums.length);
+  document.querySelectorAll(".nm1").forEach(el => el.textContent = NAME_1);
+  document.querySelectorAll(".nm2").forEach(el => el.textContent = NAME_2);
+  document.querySelectorAll(".critic-name").forEach(el => el.textContent = CRITIC_SOURCE);
+  showTab(location.hash.slice(1));
+}).catch(err => {
+  document.getElementById("problem").append(h("div", "error", location.protocol === "file:"
+    ? "Browsers block reading files when a page is opened by double-clicking it. Open it through GitHub Pages instead, or use the Live Server extension in VS Code."
+    : err.message));
+});
+</script>
+</body>
+</html>

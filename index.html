@@ -3,114 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Korin &amp; Nimbus Rate Albums</title>
-<meta name="description" content="Two friends, four albums a week, one rating sheet. Every album we've rated, with the scores side by side.">
-<style>
-  /* ---------- 1. COLORS & FONTS (change these first!) ---------- */
-  :root {
-    --bg: #f6f1e7;          /* page background */
-    --card: #fffdf8;        /* album rows */
-    --ink: #1c1a17;         /* main text */
-    --muted: #6b655b;       /* secondary text */
-    --line: #e1d9c8;        /* borders */
-    --accent: #c4361b;      /* highlight color */
-    --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --font-title: Georgia, "Times New Roman", serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #17150f; --card: #211e16; --ink: #f1ecdf;
-      --muted: #a39b88; --line: #38332a; --accent: #ff6b4a;
-    }
-  }
-
-  /* ---------- 2. LAYOUT ---------- */
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: var(--font); line-height: 1.45;
-  }
-  main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 64px; }
-
-  header h1 {
-    font-family: var(--font-title); font-weight: 700;
-    font-size: clamp(2rem, 6vw, 3.4rem); line-height: 1.05; margin: 0 0 12px;
-  }
-  header h1 span { color: var(--accent); }
-  header p { max-width: 62ch; color: var(--muted); margin: 0 0 8px; font-size: 1.05rem; }
-
-  /* stats strip */
-  .stats { display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 28px 0; padding: 16px 0;
-           border-block: 1px solid var(--line); }
-  .stat b { display: block; font-family: var(--font-title); font-size: 1.7rem; line-height: 1.1; }
-  .stat b.long { font-size: 1.15rem; max-width: 24ch; padding-top: .35rem; }
-  .stat small { color: var(--muted); }
-
-  /* controls */
-  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
-  .controls input, .controls select {
-    font: inherit; color: var(--ink); background: var(--card);
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
-  }
-  .controls input { flex: 1 1 220px; }
-  .count { color: var(--muted); align-self: center; font-size: .9rem; }
-
-  /* ---------- 3. ONE ALBUM ROW ---------- */
-  .album {
-    display: grid; grid-template-columns: 1.3fr auto 1.5fr; gap: 16px 28px; align-items: start;
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 16px 18px; margin-bottom: 10px;
-  }
-  .title { font-family: var(--font-title); font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
-  .artist { color: var(--muted); }
-  .meta { margin-top: 6px; font-size: .82rem; color: var(--muted); }
-  .comment { margin-top: 8px; font-style: italic; font-size: .92rem; }
-
-  .scores { display: flex; gap: 14px; }
-  .score { text-align: center; min-width: 74px; }
-  .score .who { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-  .score .num { font-family: var(--font-title); font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
-  .grade { display: inline-block; min-width: 2.2em; padding: 1px 8px; border-radius: 99px; font-size: .78rem;
-           font-weight: 700; color: #fff; background: var(--muted); }
-  .g-Jimmey { background: #b8860b; }
-  .g-S { background: #2f8f4e; }
-  .g-A { background: #4a9a8a; }
-  .g-B { background: #4f78b0; }
-  .g-C { background: #8a7fb0; }
-  .g-D { background: #b0793a; }
-  .g-Bean  { background: #7a4b2a; }
-
-  .details { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: .9rem; margin: 0; }
-  .details dt { color: var(--muted); }
-  .details dd { margin: 0; }
-  .both { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-left: 6px; }
-  .split { display: block; }
-  .split i { font-style: normal; color: var(--muted); }
-
-  .flag { color: var(--accent); font-weight: 600; }
-  .empty, .error { padding: 32px; text-align: center; color: var(--muted); }
-  .error { color: var(--accent); }
-  footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
-
-  /* phones: stack everything */
-  @media (max-width: 760px) {
-    .album { grid-template-columns: 1fr; }
-    .scores { justify-content: flex-start; }
-  }
-</style>
+<title>Korin &amp; Nimbus – The Weekly Album Ratings</title>
+<meta name="description" content="Four albums a week, two opinions, one verdict. Every album Korin and Nimbus have rated, scores side by side.">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main>
-  <header>
-    <h1>Korin <span>&amp;</span> Nimbus<br>rate albums</h1>
-    <p>Every week we each pick two albums. We listen for seven days, then rate them: the album as a whole (0&ndash;10), the cover, our favorite song, the best feature and the best instrumental.</p>
-    <p>Grades run from <b>Jimmey</b> (a perfect 10) down through S, A, B, C and D to <b>Bean</b> (a bad album).</p>
-  </header>
+<header class="masthead">
+  <div class="wrap">
+    <div class="topline"><span>The weekly album ratings</span><span>4 albums a week / 2 opinions / 1 verdict</span></div>
 
-  <section class="stats" id="stats" aria-label="Summary"></section>
+    <!-- TITLE: change the words here -->
+    <h1>Korin &amp;<br>Nimbus</h1>
 
+    <!-- INTRO: change the text here. Keep class="js-total" if you want the live album count. -->
+    <div class="intro">
+      <p>Every week we each pick two albums and live with them for seven days. Then we rate everything: the album, the cover, the best song, the best feature and the best instrumental.</p>
+      <p><b><span class="js-total">…</span> albums in and still going.</b> Steal our taste.</p>
+    </div>
+    <a class="lab-link" href="lab.html">Open the Lab <span>Taste map / Vs the critics / Guess the score / Chef’s choice / Hot takes →</span></a>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 1. each person's average and top 4 -->
+  <section class="us" aria-label="Our averages and top 4">
+    <div class="us-head"><b class="js-total">…</b>albums rated<small id="lastdate"></small></div>
+    <div class="us-grid" id="us"></div>
+  </section>
+
+  <!-- 2. what we are listening to right now -->
+  <div class="sec-head"><h2>Now listening</h2><span>This week’s picks. We rate these at our next session.</span></div>
+  <div class="minis" id="listening"></div>
+
+  <!-- 3. the latest verdicts (delete this block if you don't want it) -->
+  <div class="sec-head"><h2>Latest rated</h2><span>Our four most recent verdicts</span></div>
+  <div class="minis" id="latest"></div>
+
+  <!-- 4. search and the full list -->
+  <div class="sec-head"><h2>Every album</h2><span>Search, sort, argue</span></div>
   <section class="controls">
-    <input id="search" type="search" placeholder="Search album, artist, song, feature…" aria-label="Search">
+    <input id="search" type="search" placeholder="Search album or artist…" aria-label="Search albums or artists">
+    <label class="check"><input id="wide" type="checkbox"> Also search songs, features &amp; comments</label>
     <select id="sort" aria-label="Sort by">
       <option value="date-desc">Newest rated first</option>
       <option value="date-asc">Oldest rated first</option>
@@ -125,151 +58,168 @@
     <span class="count" id="count"></span>
   </section>
 
-  <section id="list" aria-live="polite"><div class="empty">Loading albums…</div></section>
+  <div class="pills" id="pills" role="group" aria-label="Filter by genre" hidden></div>
 
-  <footer>Ratings live in a spreadsheet; this page reads it every time you open it.</footer>
+  <details class="legend-wrap" open>
+    <summary>How the grades work</summary>
+    <ul id="legend"></ul>
+    <p>A perfect 10 is a Jimmey. A Jimmey that made someone’s top 4 is marked FAV.</p>
+  </details>
+
+  <section id="list" aria-live="polite"><div class="empty">Loading albums…</div></section>
+  <button class="more" id="more" hidden></button>
+
+  <div class="sec-head"><h2>Fun facts</h2><span>Worked out from our own ratings</span></div>
+  <section class="facts" id="facts"></section>
+
+  <footer>
+    Ratings live in a spreadsheet and this page reads it every time you open it.
+    Album covers are looked up through Apple’s public iTunes Search API and belong to their respective owners.
+    Spotify links open a search on Spotify.
+  </footer>
 </main>
 
 <script src="xlsx.full.min.js"></script>
+<script src="ratings.js"></script>
 <script>
-/* ---------- 4. SETTINGS ---------- */
-const DATA_FILE = "Albums.xlsx";   // the Excel file sitting next to this page
-const NAME_1 = "Nimbus";           // must match the column names in the sheet
-const NAME_2 = "Korin";
+const PAGE_SIZE = 24;              // how many albums show before "Show more"
+const RELATED_MIN = 7.5;           // connections only list albums whose average is at least this
 
-/* ---------- 5. READ THE EXCEL FILE ---------- */
-let albums = [];
+/* Names that contain "&" or "," and must NOT be split into two artists (add your own!) */
+const KEEP_TOGETHER = ["Tyler, The Creator", "Earth, Wind & Fire", "Mumford & Sons", "Simon & Garfunkel", "Hall & Oates",
+  "Florence + The Machine", "Years & Years", "Sly & The Family Stone", "Crosby, Stills & Nash", "Kool & The Gang"];
 
-async function loadAlbums() {
-  const res = await fetch(DATA_FILE + "?v=" + Date.now());   // ?v= avoids an old cached copy
-  if (!res.ok) throw new Error("Could not load " + DATA_FILE + " (" + res.status + ")");
-  const wb = XLSX.read(await res.arrayBuffer(), { type: "array" });
-  const ws = wb.Sheets[wb.SheetNames[0]];          // first sheet in the workbook
-  const range = XLSX.utils.decode_range(ws["!ref"]);
-
-  // find the header row (the row that contains "Album")
-  let headerRow = -1;
-  for (let r = range.s.r; r <= Math.min(range.e.r, range.s.r + 10) && headerRow < 0; r++) {
-    for (let c = range.s.c; c <= range.e.c; c++) {
-      if (text(ws[XLSX.utils.encode_cell({ r, c })]).toLowerCase() === "album") { headerRow = r; break; }
-    }
+/* ---------- 7. CONNECTIONS (same artist, guest appearances) ---------- */
+function splitNames(s, commaToo) {                    // "Jay-Z & Kanye West" -> ["Jay-Z", "Kanye West"]
+  let t = String(s); const keep = [];
+  for (const k of KEEP_TOGETHER) {
+    t = t.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "ig"), m => { keep.push(m); return "\u0001" + (keep.length - 1) + "\u0001"; });
   }
-  if (headerRow < 0) throw new Error('No header row with an "Album" column found.');
-
-  // map column name -> column number, so the order of columns doesn't matter
-  const col = {};
-  for (let c = range.s.c; c <= range.e.c; c++) {
-    const h = text(ws[XLSX.utils.encode_cell({ r: headerRow, c })]).toLowerCase();
-    if (h) col[h] = c;
+  const sep = commaToo ? /\s*(?:,|&|\+|\/|;|\bfeat\.?|\bft\.?|\bfeaturing\b|\band\b|\s+x\s+)\s*/i
+                       : /\s*(?:&|\+|\/|;|\bfeat\.?|\bft\.?|\bfeaturing\b|\band\b|\s+x\s+)\s*/i;
+  return t.split(sep).map(p => p.replace(/\u0001(\d+)\u0001/g, (_, i) => keep[+i]).trim()).filter(p => p && !blank(p));
+}
+let byArtist = new Map(), byFeature = new Map();
+function pushTo(map, key, a) { if (!key) return; if (!map.has(key)) map.set(key, []); map.get(key).push(a); }
+function buildIndex() {
+  byArtist = new Map(); byFeature = new Map();
+  for (const a of albums) {
+    a.artistNames = splitNames(a.artist, false);
+    a.featNames = [...new Set(a.feat.flatMap(f => splitNames(f, true)))];
+    a.artistNames.forEach(n => pushTo(byArtist, nk(n), a));
+    a.featNames.forEach(n => pushTo(byFeature, nk(n), a));
   }
-  const cell = (r, name) => ws[XLSX.utils.encode_cell({ r, c: col[name.toLowerCase()] })];
-  const has = name => col[name.toLowerCase()] !== undefined;
+}
+const uniq = list => [...new Set(list)];
+const byAvgDesc = (x, y) => (y.avg ?? -1) - (x.avg ?? -1);
+function connections(a) {                            // what else in our list connects to this album?
+  if (a._conn) return a._conn;
+  const ok = x => x !== a && x.avg != null && x.avg >= RELATED_MIN;
+  const mine = new Set(a.artistNames.map(nk));
+  const groups = [];
+  const same = uniq(a.artistNames.flatMap(n => byArtist.get(nk(n)) || [])).filter(ok).sort(byAvgDesc);
+  if (same.length) groups.push({ title: "More by " + a.artist, showArtist: false, items: same.slice(0, 5).map(x => ({ a: x, note: "" })) });
+  const asGuest = uniq(a.artistNames.flatMap(n => byFeature.get(nk(n)) || []))
+    .filter(x => ok(x) && !x.artistNames.some(n => mine.has(nk(n)))).sort(byAvgDesc);
+  if (asGuest.length) {
+    const guestNames = a.artistNames.filter(n => asGuest.some(x => x.featNames.some(f => nk(f) === nk(n))));
+    groups.push({ title: guestNames.join(" & ") + " as a guest on", showArtist: true, items: asGuest.slice(0, 5).map(x => ({ a: x, note: "" })) });
+  }
+  const guests = [];
+  for (const g of a.featNames) {
+    if (mine.has(nk(g))) continue;
+    for (const x of (byArtist.get(nk(g)) || []).filter(ok)) guests.push({ a: x, note: "guest here: " + g });
+  }
+  const seen = new Set(); const guestItems = guests.filter(i => !seen.has(i.a.row) && seen.add(i.a.row)).sort((p, q) => byAvgDesc(p.a, q.a));
+  if (guestItems.length) groups.push({ title: "Guests on this album, with their own albums", showArtist: false, items: guestItems.slice(0, 5) });
+  a._conn = { groups, count: groups.reduce((s, g) => s + g.items.length, 0) };
+  return a._conn;
+}
 
-  const out = [];
-  for (let r = headerRow + 1; r <= range.e.r; r++) {
-    const title = text(cell(r, "Album"));
-    if (!title) continue;                          // skip empty rows
-    const n1 = score(cell(r, "O.R. " + NAME_1)), n2 = score(cell(r, "O.R. " + NAME_2));
-    out.push({
-      title, artist: text(cell(r, "Artist")),
-      year: num(cell(r, "Year")),
-      date: excelDate(cell(r, "Dates")),
-      by: has("Picked By") ? text(cell(r, "Picked By")) : "",
-      comment: has("Comments") ? text(cell(r, "Comments")) : "",
-      r1: n1, r2: n2,
-      avg: n1 != null && n2 != null ? (n1 + n2) / 2 : (n1 ?? n2),
-      diff: n1 != null && n2 != null ? Math.abs(n1 - n2) : null,
-      song:  [text(cell(r, "Top Song " + NAME_1)), text(cell(r, "Top Song " + NAME_2))],
-      feat:  [text(cell(r, "Best Feature " + NAME_1)), text(cell(r, "Best Feature " + NAME_2))],
-      instr: [text(cell(r, "Best Instrumentals " + NAME_1)), text(cell(r, "Best Instrumentals " + NAME_2))],
-      cover: [score(cell(r, "Cover Rating " + NAME_1)), score(cell(r, "Cover Rating " + NAME_2))],
+/* ---------- 9. DRAW THE PAGE ---------- */
+function albumRow(a) {
+  const row = h("article", "album");
+  row.dataset.row = a.row;
+  const cover = makeCover(a, io);
+
+  const info = h("div", "info");
+  const meta = h("div", "meta");
+  for (const m of [a.year, a.genres.length && a.genres.join(", "), a.by && "picked by " + a.by, a.date && "rated " + fmtDate(a.date)]) if (m) meta.append(h("span", null, String(m)));
+  info.append(meta, h("div", "title", a.title), h("div", "artist", a.artist));
+  const r = remark(a);
+  if (r) info.append(h("div", "remark", r));
+  if (a.comment) info.append(h("p", "comment", a.comment));
+
+  const actions = h("div", "actions");
+  actions.append(spotifyLink(a));
+  const conn = connections(a);
+  const related = h("div", "related"); related.hidden = true;
+  if (conn.count) {
+    const toggle = h("button", "toggle", "Connections (" + conn.count + ") ▾");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.addEventListener("click", () => {
+      const open = related.hidden;                    // build the panel the first time it opens
+      if (open && !related.childElementCount) related.append(...conn.groups.map(relGroup));
+      related.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.textContent = "Connections (" + conn.count + ") " + (open ? "▴" : "▾");
     });
+    actions.append(toggle);
   }
-  return out;
-}
+  info.append(actions);
 
-/* helpers that turn messy spreadsheet cells into clean values */
-function text(c) { return c ? String(c.w ?? c.v ?? "").trim() : ""; }       // .w = text as shown in Excel
-function num(c)  { return c && typeof c.v === "number" ? c.v : null; }
-function score(c) {                                  // 9.6, "8,0/10", "Jimmey" -> number
-  if (!c || c.v == null) return null;
-  if (typeof c.v === "number") return c.v;
-  const s = String(c.v).trim();
-  if (s.toLowerCase() === "jimmey") return 10;
-  const m = s.replace(",", ".").match(/^(\d+(?:\.\d+)?)/);
-  return m ? parseFloat(m[1]) : null;
-}
-function excelDate(c) {                               // Excel stores dates as day numbers
-  return c && typeof c.v === "number" ? Math.round((c.v - 25569) * 86400000) : null;
-}
-function grade(n) {                                   // same rules as the Excel formula
-  if (n == null) return "";
-  if (n === 10) return "Jimmey";
-  if (n > 8.9) return "S";
-  if (n > 8.4) return "A";
-  if (n > 7.9) return "B";
-  if (n > 6.9) return "C";
-  if (n > 5.9) return "D";
-  return "Bean";
-}
+  const scores = h("div", "scores");
+  scores.append(scoreBox(NAME_1, a.r1, a.fav[0]), scoreBox(NAME_2, a.r2, a.fav[1]));
 
-/* ---------- 6. DRAW THE PAGE ---------- */
-function h(tag, cls, content) {                       // tiny helper to build elements safely
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (content != null) e.textContent = content;
-  return e;
-}
-const fmt = n => n == null ? "–" : (Number.isInteger(n) ? n.toFixed(0) : n.toFixed(1));
-const fmtDate = ms => ms == null ? "" : new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-const blank = s => !s || s === "/" || s === "-";
+  const picks = h("div", "picks");
+  picks.append(
+    tile("song", "Top song", b => pairInto(b, a.song[0], a.song[1])),
+    tile("feature", "Best feature", b => pairInto(b, a.feat[0], a.feat[1])),
+    tile("instr", "Best instrumental", b => pairInto(b, a.instr[0], a.instr[1])),
+    tile("cover", "Cover art", b => {
+      const [c1, c2] = a.cover;
+      if (c1 == null && c2 == null) { b.append(h("span", "none", "–")); return; }
+      if (c1 === c2) { b.append(fmt(c1) + " / 10", h("span", "both", "both")); return; }
+      for (const [name, v] of [[NAME_1, c1], [NAME_2, c2]]) {
+        const line = h("div", "line"); line.append(h("span", "who", name), fmt(v) + " / 10"); b.append(line);
+      }
+    }),
+  );
 
-function pair(a, b, dd) {                             // show one value, or both if they differ
-  if (blank(a) && blank(b)) { dd.textContent = "–"; return; }
-  if (!blank(a) && a.toLowerCase() === b.toLowerCase()) {
-    dd.append(a); dd.append(h("span", "both", "both")); return;
+  row.append(cover, info, scores, picks, related);
+  return row;
+}
+function relGroup(g) {
+  const box = h("div", "rel-group");
+  box.append(h("h4", null, g.title));
+  for (const { a, note } of g.items) {
+    const b = h("button", "rel-item");
+    b.append(h("em", null, fmt(a.avg)), h("b", null, a.title), h("span", null, [g.showArtist && a.artist, a.year, note].filter(Boolean).join(" / ")));
+    b.addEventListener("click", () => jumpTo(a));
+    box.append(b);
   }
-  for (const [name, val] of [[NAME_1, a], [NAME_2, b]]) {
-    const line = h("span", "split");
-    line.append(h("i", null, name + ": "), blank(val) ? "–" : val);
-    dd.append(line);
-  }
-}
-
-function scoreBox(name, n) {
-  const box = h("div", "score");
-  box.append(h("div", "who", name), h("div", "num", fmt(n)));
-  const g = grade(n);
-  if (g) box.append(h("span", "grade g-" + g, g));
   return box;
 }
 
-function albumRow(a) {
-  const row = h("article", "album");
-
-  const left = h("div");
-  left.append(h("div", "title", a.title), h("div", "artist", a.artist));
-  const meta = [a.year, a.by && "picked by " + a.by, a.date && "rated " + fmtDate(a.date)].filter(Boolean).join(" · ");
-  left.append(h("div", "meta", meta));
-  if (a.diff >= 2) left.append(h("div", "meta flag", "We disagree by " + fmt(a.diff) + " points"));
-  if (a.comment) left.append(h("div", "comment", a.comment));
-
-  const scores = h("div", "scores");
-  scores.append(scoreBox(NAME_1, a.r1), scoreBox(NAME_2, a.r2));
-
-  const dl = h("dl", "details");
-  for (const [label, vals] of [["Top song", a.song], ["Best feature", a.feat], ["Best instrumental", a.instr]]) {
-    const dd = h("dd");
-    pair(vals[0], vals[1], dd);
-    dl.append(h("dt", null, label), dd);
+function chip(name, n) {                              // small tinted score for the small cards
+  const g = grade(n);
+  const c = h("div", "chip" + (g ? " g-" + g : ""));
+  c.append(h("span", "w", name), h("span", "n", fmt(n)));
+  return c;
+}
+function miniCard(a, rated) {
+  const card = h("article", "mini" + (rated ? " click" : ""));
+  const body = h("div", "mini-body");
+  body.append(h("div", "mini-title", a.title), h("div", "mini-artist", a.artist));
+  if (rated) {
+    const s = h("div", "mini-scores"); s.append(chip(NAME_1, a.r1), chip(NAME_2, a.r2)); body.append(s);
+    card.addEventListener("click", () => jumpTo(a));
+  } else {
+    body.append(h("div", "mini-meta", ["Picked by " + (a.by || "us"), a.year].filter(Boolean).join(" / ")));
   }
-  const cov = h("dd");
-  cov.textContent = a.cover[0] === a.cover[1] ? fmt(a.cover[0]) + " / 10" : NAME_1 + " " + fmt(a.cover[0]) + " · " + NAME_2 + " " + fmt(a.cover[1]);
-  if (a.cover[0] === a.cover[1] && a.cover[0] != null) cov.append(h("span", "both", "both"));
-  dl.append(h("dt", null, "Cover"), cov);
-
-  row.append(left, scores, dl);
-  return row;
+  body.append(spotifyLink(a));
+  card.append(makeCover(a, ioTop), body);
+  return card;
 }
 
 const SORTS = {
@@ -284,40 +234,128 @@ const SORTS = {
   "album-asc":  (a, b) => a.title.localeCompare(b.title),
 };
 
-function render() {
-  const q = document.getElementById("search").value.trim().toLowerCase();
-  const list = document.getElementById("list");
+let limit = PAGE_SIZE, genre = "";
+function render(opts = {}) {
+  if (opts.reset) limit = PAGE_SIZE;
+  const q = fold(document.getElementById("search").value.trim());
+  const wide = document.getElementById("wide").checked;
   const shown = albums
-    .filter(a => !q || [a.title, a.artist, a.comment, ...a.song, ...a.feat, ...a.instr].join(" ").toLowerCase().includes(q))
+    .filter(a => !q || a.hayMain.includes(q) || (wide && a.hayExtra.includes(q)))
+    .filter(a => !genre || a.genres.includes(genre))
     .sort(SORTS[document.getElementById("sort").value]);
-  list.replaceChildren(...(shown.length ? shown.map(albumRow) : [h("div", "empty", "No albums match that search.")]));
+  if (opts.ensure) { const i = shown.indexOf(opts.ensure); if (i >= limit) limit = i + 1; }   // make sure a jumped-to album is on screen
+  io.disconnect();                                    // forget the old rows
+  const visible = shown.slice(0, limit);
+  document.getElementById("list").replaceChildren(...(visible.length ? visible.map(albumRow) : [h("div", "empty", "No albums match that search.")]));
   document.getElementById("count").textContent = shown.length + " of " + albums.length + " albums";
+  const more = document.getElementById("more");
+  more.hidden = shown.length <= limit;
+  more.textContent = "Show " + Math.min(PAGE_SIZE, shown.length - limit) + " more (" + (shown.length - limit) + " left)";
 }
 
-function renderStats() {
+function jumpTo(a) {                                  // clear the filters, scroll to an album and highlight it
+  document.getElementById("search").value = "";
+  document.getElementById("wide").checked = false;
+  genre = ""; syncPills();
+  render({ ensure: a });
+  const el = document.querySelector('.album[data-row="' + a.row + '"]');
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+}
+
+function renderUs() {
+  document.querySelectorAll(".js-total").forEach(el => el.textContent = albums.length);
+  const recent = [...albums].sort((a, b) => ((b.date ?? -Infinity) - (a.date ?? -Infinity)) || (b.row - a.row));
+  const last = recent.find(a => a.date != null);
+  document.getElementById("lastdate").textContent = last ? "last session " + fmtDate(last.date) : "";
+
   const avg = k => { const v = albums.map(a => a[k]).filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
-  const split = albums.filter(a => a.diff != null).sort(SORTS["diff-desc"])[0];
-  const best = albums.filter(a => a.avg != null).sort(SORTS["avg-desc"])[0];
-  const items = [
-    [albums.length, "albums rated"],
-    [fmt(avg("r1") && +avg("r1").toFixed(2)), NAME_1 + "’s average"],
-    [fmt(avg("r2") && +avg("r2").toFixed(2)), NAME_2 + "’s average"],
-  ];
-  if (best) items.push([best.title, "highest rated (avg " + fmt(+best.avg.toFixed(2)) + ")"]);
-  if (split && split.diff > 0) items.push([split.title, "biggest split (" + fmt(split.diff) + (split.diff === 1 ? " point" : " points") + " apart)"]);
-  document.getElementById("stats").replaceChildren(...items.map(([big, small]) => {
+  const us = document.getElementById("us");
+  us.replaceChildren(...[[NAME_1, "r1", 0], [NAME_2, "r2", 1]].map(([name, key, i]) => {
+    const p = h("div", "person");
+    const av = h("div", "avg", fmt(avg(key) == null ? null : +avg(key).toFixed(2)));
+    av.append(h("small", null, "average rating"));
+    p.append(h("div", "who", name), av, h("div", "top4-label", "Top 4"));
+    const favs = albums.filter(a => a.fav[i]).sort((x, y) => x.row - y.row).slice(0, 4);
+    const grid = h("div", "top4");
+    for (let n = 0; n < 4; n++) {
+      const a = favs[n];
+      if (!a) { grid.append(h("div", "slot", n === 0 && !favs.length ? "No favorites marked yet" : "#" + (n + 1))); continue; }
+      const b = h("button", "poster");
+      b.title = a.title + " – " + a.artist;
+      b.append(makeCover(a, ioTop), h("div", "pt", a.title));
+      b.addEventListener("click", () => jumpTo(a));
+      grid.append(b);
+    }
+    p.append(grid);
+    return p;
+  }));
+
+  document.getElementById("latest").replaceChildren(...recent.slice(0, 4).map(a => miniCard(a, true)));
+  document.getElementById("listening").replaceChildren(...(listening.length ? listening.map(a => miniCard(a, false)) : [h("p", "empty-note", "Nothing in the queue right now.")]));
+}
+
+function renderPills() {                              // genre buttons (only when the sheet has a Genre column)
+  const counts = new Map();
+  albums.forEach(a => a.genres.forEach(g => counts.set(g, (counts.get(g) || 0) + 1)));
+  const box = document.getElementById("pills");
+  box.hidden = counts.size === 0;
+  if (!counts.size) return;
+  const items = [["", "All", albums.length], ...[...counts].sort((x, y) => y[1] - x[1]).map(([g, n]) => [g, g, n])];
+  box.replaceChildren(...items.map(([val, label, n]) => {
+    const b = h("button", "pill", label); b.dataset.genre = val;
+    b.append(h("small", null, String(n)));
+    b.addEventListener("click", () => { genre = val; syncPills(); render({ reset: true }); });
+    return b;
+  }));
+  syncPills();
+}
+function syncPills() { document.querySelectorAll("#pills .pill").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.genre === genre))); }
+
+function renderFacts() {                              // facts that come straight out of the ratings
+  const f = [];
+  const both = albums.filter(a => a.diff != null);
+  if (both.length >= 5) f.push([Math.round(100 * both.filter(a => a.diff <= 1).length / both.length) + "%", "of albums where we land within 1 point of each other"]);
+  const split = both.slice().sort(SORTS["diff-desc"])[0];
+  if (split && split.diff > 0) f.push([split.title, "biggest split: " + NAME_1 + " " + fmt(split.r1) + ", " + NAME_2 + " " + fmt(split.r2)]);
+  const picks = name => { const v = albums.filter(a => fold(a.by) === fold(name) && a.avg != null); return { n: v.length, avg: v.reduce((s, a) => s + a.avg, 0) / (v.length || 1) }; };
+  const p1 = picks(NAME_1), p2 = picks(NAME_2);
+  if (p1.n >= 3 && p2.n >= 3) f.push([fmt(+p1.avg.toFixed(2)) + " vs " + fmt(+p2.avg.toFixed(2)), "average of " + NAME_1 + "’s picks vs " + NAME_2 + "’s picks (both our ratings)"]);
+  const top = (key, min) => { const c = new Map(); albums.forEach(a => a[key].forEach(n => { const k = nk(n); if (!c.has(k)) c.set(k, { name: n, n: 0 }); c.get(k).n++; })); return [...c.values()].sort((x, y) => y.n - x.n).find(x => x.n >= min); };
+  const feat = top("featNames", 2); if (feat) f.push([feat.name, "our most-picked best feature (" + feat.n + " albums)"]);
+  const art = top("artistNames", 2); if (art) f.push([art.name, "the artist we have rated most (" + art.n + " albums)"]);
+  const box = document.getElementById("facts");
+  box.replaceChildren(...f.map(([big, small]) => {
     const d = h("div", "stat"); d.append(h("b", String(big).length > 8 ? "long" : null, big), h("small", null, small)); return d;
+  }));
+  if (!f.length) box.append(h("p", "empty-note", "Facts show up once there are a few more albums in the sheet."));
+}
+
+function renderLegend() {
+  const legend = [["Jimmey", "10"], ["S", "9+"], ["A", "8.5+"], ["B", "8+"], ["C", "7+"], ["D", "6+"], ["Bean", "below 6"]];
+  document.getElementById("legend").replaceChildren(...legend.map(([g, r]) => {
+    const li = h("li", "g-" + g); li.append(h("b", null, g), r); return li;
   }));
 }
 
-/* ---------- 7. START ---------- */
-document.getElementById("search").addEventListener("input", render);
-document.getElementById("sort").addEventListener("change", render);
+/* ---------- 10. START ---------- */
+renderLegend();
+document.getElementById("search").addEventListener("input", () => render({ reset: true }));
+document.getElementById("wide").addEventListener("change", () => render({ reset: true }));
+document.getElementById("sort").addEventListener("change", () => render({ reset: true }));
+document.getElementById("more").addEventListener("click", () => { limit += PAGE_SIZE; render(); });
 
-loadAlbums().then(data => {
-  albums = data;
-  renderStats();
-  render();
+loadAll().then(() => {
+  buildIndex();
+  renderUs();
+  renderPills();
+  renderFacts();
+  render({ reset: true });
+  // links from the Lab look like index.html?album=... and open that album
+  const want = new URLSearchParams(location.search).get("album");
+  const target = want && albums.find(x => albumKey(x) === want);
+  if (target) setTimeout(() => jumpTo(target), 250);
 }).catch(err => {
   const msg = location.protocol === "file:"
     ? "Browsers block reading files when a page is opened by double-clicking it. Open it through GitHub Pages instead, or use the Live Server extension in VS Code."
