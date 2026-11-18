@@ -15,9 +15,9 @@ const CRITIC_SOURCE = "Pitchfork";  // name shown in the Lab for the optional "C
    {hi} = who rated higher, {lo} = who rated lower, {d} = points apart, {hs}/{ls} = the high/low score,
    {hg}/{lg} = the high/low grade name (Jimmey, S, A... Bean), {picker} = who picked the album (only if one of you did) */
 const REMARKS = {
-  perfect: ["Double Jimmey. You know what that means.", "A perfect 10 from both of us. Frame it."],
-  bean:    ["Bean for both of us. We survived.", "We agree: never again.", "This is fire. On mute.", "We hate to say it, but this was wack.", "Nope."],
-  same:    ["For once, we actually agree.", "Same score. No argument tonight.", "Wavelenght."],
+  perfect: ["Double Jimmey. Nothing more to say.", "A perfect 10 from both of us. Frame it."],
+  bean:    ["Bean for both of us. We survived.", "We agree: never again."],
+  same:    ["For once, we actually agree.", "Same score. No argument tonight."],
   small:   ["{hi} liked it a bit more.", "{lo} is holding back. {hi} is not."],
   medium:  ["{hi} is vibing, {lo} is not quite there.", "We heard two different albums. {hi} wins by {d}.", "{hi} says {hg}, {lo} says {lg}."],
   big:     ["Argument starter: {hi} gave it a {hs}, {lo} gave it a {ls}.", "{lo} and {hi} will not be settling this one.", "{hi} says {hg}. {lo} says {lg}. Same album.", "{d} points apart. We need a tiebreaker."],
@@ -221,8 +221,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const coverKey = a => fold(a.artist + "|" + a.title);
 const simple = s => fold(s).replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 
+const smallCover = url => url.replace(/\/\d+x\d+bb\.(jpg|png)/, "/300x300bb.$1").replace(/\/front-(500|1200)$/, "/front-250");   // phones need far fewer pixels: about 6x lighter than 600px
 function showCover(box, url) {
-  const img = new Image();
+  const img = new Image(); img.decoding = "async";
+  url = smallCover(url);
   const al = box._album; img.alt = al ? "Album cover: " + al.title + " by " + al.artist : "";
   img.onload = () => box.append(img);                // only show it once it has really loaded
   img.src = url;
@@ -238,12 +240,17 @@ async function lookupCover(a) {
   });                                                // no good match = no cover (a wrong cover is worse than none)
   return hit ? hit.artworkUrl100.replace("100x100bb", "600x600bb") : null;
 }
+/* covers.json = a ready-made list (made once with covers-builder.html), so visitors don't have to look up every cover themselves */
+let coverMap = {};
+const coverMapReady = fetch("covers.json").then(r => r.ok ? r.json() : {}).then(m => { coverMap = m || {}; }).catch(() => {}).then(() => { coverMapReady.settled = true; });
 const queue = []; let pumping = false;
 function wantCover(a, box) {
   if (!coversAllowed()) { delete box.dataset.requested; return; }      // no consent (yet): nothing leaves the browser, the placeholder stays
   if (a.coverUrl) { showCover(box, a.coverUrl); return; }     // your own link from the spreadsheet wins
   if (!LOOK_UP_COVERS) return;
   const key = coverKey(a);
+  if (key in coverMap) { if (coverMap[key]) showCover(box, coverMap[key]); return; }     // known from covers.json ("" = no cover exists)
+  if (!coverMapReady.settled) { coverMapReady.then(() => { coverMapReady.settled = true; wantCover(a, box); }); return; }
   if (key in coverCache) { if (coverCache[key]) showCover(box, coverCache[key]); return; }
   queue.push({ a, box, key }); pump();
 }
@@ -257,7 +264,7 @@ async function pump() {
       const url = await lookupCover(job.a);
       coverCache[job.key] = url || ""; saveCovers();
       if (url) showCover(job.box, url);
-      await sleep(1200);                                                 // stay well under Apple's rate limit
+      await sleep(3200);                                                 // Apple allows about 20 lookups a minute; going faster gets us blocked
     } catch (e) { await sleep(8000); }                                   // blocked or offline: back off, keep the placeholder
   }
   pumping = false;
