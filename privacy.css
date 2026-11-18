@@ -1,0 +1,51 @@
+/* Privacy pop-up. Two looks: "be" (warm sun-and-sepia, inspired by the colours of Common's "Be")
+   and "donuts" (glaze pink and cream, inspired by J Dilla's "Donuts"). Unofficial homage: colours only, no artwork. */
+.pv { --bg:#c4b83a; --ink:#231808; --art:#231808; --art-ink:#f6efc8; --btn:#231808; --btn-ink:#f6efc8; --alt:#f6efc8; --alt-ink:#231808;
+  position: fixed; left: 14px; bottom: 14px; z-index: 1000; width: min(600px, calc(100vw - 28px)); max-height: calc(100vh - 28px); overflow-x: hidden; overflow-y: auto;
+  display: grid; grid-template-columns: 170px 1fr; background: var(--bg); color: var(--ink); border: 3px solid var(--ink); border-radius: 16px;
+  box-shadow: 6px 6px 0 var(--ink); font-family: var(--font, system-ui, sans-serif); line-height: 1.35; animation: pv-in .35s ease-out; }
+.pv[hidden] { display: none; }
+.pv-art { position: relative; min-width: 0; background: var(--art); color: var(--art-ink); padding: 14px; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; min-height: 150px; }
+.pv-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pv-art:has(img)::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgba(20,12,2,.8)); }
+.pv h2 { position: relative; z-index: 1; margin: 0; font-weight: 400; display: grid; gap: 6px; justify-items: center; }
+.pv-big { font-family: var(--font-display, "Arial Black", sans-serif); text-transform: uppercase; font-size: 2.7rem; line-height: .9; letter-spacing: .02em; max-width: 100%; }
+.pv-sub { font-weight: 700; font-size: .95rem; line-height: 1.1; }
+.pv-body { padding: 14px 16px 12px; position: relative; font-size: .86rem; }
+.pv-body p { margin: 0; }
+.pv-lead { margin-bottom: 10px !important; font-size: .92rem; }
+.pv-opt { display: grid; grid-template-columns: 128px 1fr; gap: 10px; align-items: center; margin-bottom: 8px; }
+.pv-sp { margin-top: 2px !important; }
+.pv button.pv-b { cursor: pointer; border: 3px solid var(--ink); border-radius: 11px; padding: 9px 6px; font-weight: 700; font-size: .88rem; line-height: 1.1; }
+.pv .pv-yes { background: var(--btn); color: var(--btn-ink); }
+.pv .pv-no  { background: var(--alt); color: var(--alt-ink); }
+.pv button.pv-b:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
+.pv-note { margin: 10px 0 0 !important; font-size: .8rem; }
+.pv details { display: inline; }
+.pv summary { display: inline; cursor: pointer; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.pv details[open] > span { display: block; margin-top: 6px; }
+.pv :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.pv .pv-x { position: absolute; right: 6px; top: 6px; z-index: 2; width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--ink); background: var(--alt); cursor: pointer; padding: 0; display: grid; place-items: center; color: var(--alt-ink); }
+
+.pv[data-theme="donuts"] { --bg:#f7b6cc; --ink:#3a1626; --art:#ff8fb5; --art-ink:#3a1626; --btn:#3a1626; --btn-ink:#ffe9f1; --alt:#fff7e8; --alt-ink:#3a1626; }
+.pv .pv-donut { display: none; position: absolute; right: 8px; top: 8px; width: 66px; height: 66px; pointer-events: none; }
+.pv[data-theme="donuts"] .pv-donut { display: block; animation: pv-spin 18s linear infinite; }
+.pv[data-theme="donuts"] .pv-big { font-size: 2.9rem; }
+
+@media (max-width: 520px) {
+  .pv { grid-template-columns: 1fr; }
+  .pv-art { min-height: 0; padding: 12px 14px; }
+  .pv h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .pv-big { font-size: 2.4rem; }
+  .pv-opt { grid-template-columns: 1fr; gap: 6px; }
+  .pv[data-theme="donuts"] .pv-donut { width: 46px; height: 46px; top: 6px; }
+}
+
+.pv-link { background: none; border: 0; padding: 0; margin-left: .4em; font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pv-link:focus-visible { outline: 3px solid var(--blue, #2a3bff); outline-offset: 2px; }
+.pv-small { display: block; margin-top: 6px; }
+
+@keyframes pv-in { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pv-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .pv, .pv .pv-donut { animation: none !important; } .pv button.pv-b:hover { transform: none; } }
+@media (max-width: 420px) { .pv h2 { font-size: 1.3rem; } }

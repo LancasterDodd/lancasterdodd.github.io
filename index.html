@@ -6,6 +6,7 @@
 <title>Korin &amp; Nimbus – The Weekly Album Ratings</title>
 <meta name="description" content="Four albums a week, two opinions, one verdict. Every album Korin and Nimbus have rated, scores side by side.">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="privacy.css">
 </head>
 <body>
 <header class="masthead">
@@ -74,12 +75,14 @@
 
   <footer>
     Ratings live in a spreadsheet and this page reads it every time you open it.
-    Album covers are looked up through Apple’s public iTunes Search API and belong to their respective owners.
+    Album covers are only looked up through Apple (iTunes) or the Cover Art Archive, only if you say yes in the privacy pop-up, and belong to their respective owners.
     Spotify links open a search on Spotify.
   </footer>
 </main>
 
 <script src="xlsx.full.min.js"></script>
+<script src="privacy.js"></script>
+<script src="totop.js"></script>
 <script src="ratings.js"></script>
 <script>
 const PAGE_SIZE = 24;              // how many albums show before "Show more"

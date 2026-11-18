@@ -15,9 +15,9 @@ const CRITIC_SOURCE = "Pitchfork";  // name shown in the Lab for the optional "C
    {hi} = who rated higher, {lo} = who rated lower, {d} = points apart, {hs}/{ls} = the high/low score,
    {hg}/{lg} = the high/low grade name (Jimmey, S, A... Bean), {picker} = who picked the album (only if one of you did) */
 const REMARKS = {
-  perfect: ["Double Jimmey. Nothing more to say.", "A perfect 10 from both of us. Frame it."],
-  bean:    ["Bean for both of us. We survived.", "We agree: never again."],
-  same:    ["For once, we actually agree.", "Same score. No argument tonight."],
+  perfect: ["Double Jimmey. You know what that means.", "A perfect 10 from both of us. Frame it."],
+  bean:    ["Bean for both of us. We survived.", "We agree: never again.", "This is fire. On mute.", "We hate to say it, but this was wack.", "Nope."],
+  same:    ["For once, we actually agree.", "Same score. No argument tonight.", "Wavelenght."],
   small:   ["{hi} liked it a bit more.", "{lo} is holding back. {hi} is not."],
   medium:  ["{hi} is vibing, {lo} is not quite there.", "We heard two different albums. {hi} wins by {d}.", "{hi} says {hg}, {lo} says {lg}."],
   big:     ["Argument starter: {hi} gave it a {hs}, {lo} gave it a {ls}.", "{lo} and {hi} will not be settling this one.", "{hi} says {hg}. {lo} says {lg}. Same album.", "{d} points apart. We need a tiebreaker."],
@@ -212,16 +212,18 @@ async function loadAll() {                            // read the sheet and spli
 
 /* ---------- 8. ALBUM COVERS (looked up by the visitor's browser, remembered afterwards) ---------- */
 const PLACEHOLDER_COLORS = ["#bcc3ff", "#dadeff", "#8f9aff", "#ebedff"];
+const coversAllowed = () => !window.PRIVACY || PRIVACY.covers;      // the visitor decides in the privacy pop-up (privacy.js)
 let coverCache = {};
-try { coverCache = JSON.parse(localStorage.getItem("coverCache.v1") || "{}"); } catch (e) {}
-const saveCovers = () => { try { localStorage.setItem("coverCache.v1", JSON.stringify(coverCache)); } catch (e) {} };
+const loadCache = () => { try { coverCache = JSON.parse(localStorage.getItem("coverCache.v1") || "{}"); } catch (e) {} };
+if (coversAllowed()) loadCache();
+const saveCovers = () => { if (!coversAllowed()) return; try { localStorage.setItem("coverCache.v1", JSON.stringify(coverCache)); } catch (e) {} };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const coverKey = a => fold(a.artist + "|" + a.title);
 const simple = s => fold(s).replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 
 function showCover(box, url) {
   const img = new Image();
-  img.alt = "";
+  const al = box._album; img.alt = al ? "Album cover: " + al.title + " by " + al.artist : "";
   img.onload = () => box.append(img);                // only show it once it has really loaded
   img.src = url;
 }
@@ -238,6 +240,7 @@ async function lookupCover(a) {
 }
 const queue = []; let pumping = false;
 function wantCover(a, box) {
+  if (!coversAllowed()) { delete box.dataset.requested; return; }      // no consent (yet): nothing leaves the browser, the placeholder stays
   if (a.coverUrl) { showCover(box, a.coverUrl); return; }     // your own link from the spreadsheet wins
   if (!LOOK_UP_COVERS) return;
   const key = coverKey(a);
@@ -266,6 +269,12 @@ function onSeen(entries) {
     if (e.isIntersecting && !box.dataset.requested) { box.dataset.requested = "1"; wantCover(box._album, box); }
   }
 }
+window.addEventListener("privacy-change", () => {
+  queue.length = 0;
+  if (!coversAllowed()) { coverCache = {}; document.querySelectorAll(".cover img").forEach(i => i.remove()); return; }
+  loadCache();
+  document.querySelectorAll(".cover").forEach(c => { if (c._album && c.dataset.visible && !c.querySelector("img")) { c.dataset.requested = "1"; wantCover(c._album, c); } });
+});
 const io = new IntersectionObserver(onSeen, { rootMargin: "300px" });      // for the big list (reset on every search/sort)
 const ioTop = new IntersectionObserver(onSeen, { rootMargin: "300px" });   // for everything at the top
 

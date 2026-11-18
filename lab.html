@@ -6,6 +6,7 @@
 <title>The Lab – Korin &amp; Nimbus</title>
 <meta name="description" content="A taste map, ratings by decade, us versus the critics, a guess-the-score game, recommendations and hot takes.">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="privacy.css">
 <style>
 /* ---- Guess the score: fixes ---- */
 .g-main { grid-template-columns: 190px minmax(0, 1fr); align-items: start; }
@@ -172,11 +173,13 @@
 
   <footer>
     Everything here is worked out in your browser from the same spreadsheet as the main page.
-    Album covers come from Apple’s public iTunes Search API and belong to their respective owners.
+    Album covers (only if you allowed them) come from Apple or the Cover Art Archive and belong to their respective owners.
   </footer>
 </main>
 
 <script src="xlsx.full.min.js"></script>
+<script src="privacy.js"></script>
+<script src="totop.js"></script>
 <script src="ratings.js"></script>
 <script>
 /* ---------- helpers for charts ---------- */
@@ -727,7 +730,8 @@ const DRAW = { map: () => { mapFacts(); renderMap(); }, decades: renderDecades, 
 function showTab(name, push) {
   if (!TABS.includes(name)) name = "map";
   for (const t of TABS) {
-    document.getElementById("tab-" + t).setAttribute("aria-selected", String(t === name));
+    const tb = document.getElementById("tab-" + t);
+    tb.setAttribute("aria-selected", String(t === name)); tb.tabIndex = t === name ? 0 : -1;     // one tab stop, arrows move between tabs
     document.getElementById("panel-" + t).hidden = t !== name;
   }
   if (!drawn[name]) { drawn[name] = true; DRAW[name](); }
@@ -736,6 +740,12 @@ function showTab(name, push) {
   if (push) history.replaceState(null, "", "#" + name);
 }
 document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab, true)));
+document.querySelector("[role=tablist]").addEventListener("keydown", e => {       // keyboard: ← → Home End move, Enter/Space open
+  const keys = { ArrowRight: 1, ArrowLeft: -1, Home: "h", End: "e" }; if (!(e.key in keys)) return;
+  const tabs = [...document.querySelectorAll(".tab")], i = tabs.indexOf(document.activeElement); if (i < 0) return;
+  const n = keys[e.key] === "h" ? 0 : keys[e.key] === "e" ? tabs.length - 1 : (i + keys[e.key] + tabs.length) % tabs.length;
+  e.preventDefault(); tabs[n].focus();
+});
 window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
 document.getElementById("only2").addEventListener("change", renderMap);
 let resizeTimer; window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (!document.getElementById("panel-map").hidden && drawn.map) renderMap(); if (!document.getElementById("panel-critics").hidden && drawn.critics) renderCritics(); }, 120); });
