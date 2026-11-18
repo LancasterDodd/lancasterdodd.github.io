@@ -85,7 +85,7 @@
 <script src="totop.js"></script>
 <script src="ratings.js"></script>
 <script>
-const PAGE_SIZE = 24;              // how many albums show before "Show more"
+const PAGE_SIZE = 40;              // how many albums show before "Show more"
 const RELATED_MIN = 7.5;           // connections only list albums whose average is at least this
 
 /* Names that contain "&" or "," and must NOT be split into two artists (add your own!) */
@@ -247,9 +247,9 @@ function render(opts = {}) {
     .filter(a => !genre || a.genres.includes(genre))
     .sort(SORTS[document.getElementById("sort").value]);
   if (opts.ensure) { const i = shown.indexOf(opts.ensure); if (i >= limit) limit = i + 1; }   // make sure a jumped-to album is on screen
-  io.disconnect();                                    // forget the old rows
-  const visible = shown.slice(0, limit);
-  document.getElementById("list").replaceChildren(...(visible.length ? visible.map(albumRow) : [h("div", "empty", "No albums match that search.")]));
+  const visible = shown.slice(0, limit), list = document.getElementById("list");
+  if (opts.append) list.append(...visible.slice(list.children.length).map(albumRow));      // "Show 40 more": only add the new rows, the ones above stay untouched
+  else { io.disconnect(); list.replaceChildren(...(visible.length ? visible.map(albumRow) : [h("div", "empty", "No albums match that search.")])); }
   document.getElementById("count").textContent = shown.length + " of " + albums.length + " albums";
   const more = document.getElementById("more");
   more.hidden = shown.length <= limit;
@@ -347,7 +347,7 @@ renderLegend();
 document.getElementById("search").addEventListener("input", () => render({ reset: true }));
 document.getElementById("wide").addEventListener("change", () => render({ reset: true }));
 document.getElementById("sort").addEventListener("change", () => render({ reset: true }));
-document.getElementById("more").addEventListener("click", () => { limit += PAGE_SIZE; render(); });
+document.getElementById("more").addEventListener("click", () => { limit += PAGE_SIZE; render({ append: true }); });
 
 loadAll().then(() => {
   buildIndex();

@@ -233,7 +233,7 @@ function pumpImgs() {
     if (!imgQ.length) break;
     imgQ.forEach(it => { it.y = yOf(it); }); imgQ.sort((x, y) => x.y - y.y);
     const it = imgQ.shift(); imgActive++;
-    const img = new Image(); img.decoding = "async";
+    const img = new Image(); img.decoding = "async"; img.referrerPolicy = "no-referrer";      // the cover host is not told which page you are on
     const fin = ok => { imgActive--; if (ok && it.box) it.done(img); pumpImgs(); };
     img.onload = () => fin(true); img.onerror = () => fin(false);
     img.src = it.url;
