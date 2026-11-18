@@ -223,34 +223,35 @@ const coverKey = a => fold(a.artist + "|" + a.title);
 const simple = s => fold(s).replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 
 const smallCover = url => url.replace(/\/\d+x\d+bb\.(jpg|png)/, "/300x300bb.$1").replace(/\/front-(500|1200)$/, "/front-250");   // phones need far fewer pixels: about 6x lighter than 600px
-/* Covers load through a small queue: 6 at a time, favourites first, then the most recently rated albums.
-   Albums the visitor has already scrolled past are skipped, so fast scrolling doesn't pile up downloads. */
+/* Covers load through a small queue, 6 at a time, always the one highest on the screen first.
+   Albums you have already scrolled past are skipped, so fast scrolling doesn't pile up downloads. */
 const imgQ = []; let imgActive = 0;
-const coverPrio = a => (a && a.fav && (a.fav[0] || a.fav[1])) ? -1e15 : -((a && a.date) || 0);     // lower = sooner
+const yOf = it => it.box ? it.box.getBoundingClientRect().top + scrollY : 1e12;      // position on the page; no box = background warm-up, goes last
 function pumpImgs() {
   while (imgActive < 6 && imgQ.length) {
-    const it = imgQ.shift();
-    if (it.box && !it.box.dataset.visible) { delete it.box.dataset.requested; continue; }      // scrolled past meanwhile: ask again when it comes back
-    imgActive++;
+    for (let i = imgQ.length - 1; i >= 0; i--) if (imgQ[i].box && !imgQ[i].box.dataset.visible) { delete imgQ[i].box.dataset.requested; imgQ.splice(i, 1); }   // scrolled past: ask again when it comes back
+    if (!imgQ.length) break;
+    imgQ.forEach(it => { it.y = yOf(it); }); imgQ.sort((x, y) => x.y - y.y);
+    const it = imgQ.shift(); imgActive++;
     const img = new Image(); img.decoding = "async";
     const fin = ok => { imgActive--; if (ok && it.box) it.done(img); pumpImgs(); };
     img.onload = () => fin(true); img.onerror = () => fin(false);
     img.src = it.url;
   }
 }
-function queueImg(url, prio, box, done) { imgQ.push({ url, prio, box, done }); imgQ.sort((x, y) => x.prio - y.prio); pumpImgs(); }
+function queueImg(url, box, done) { imgQ.push({ url, box, done }); pumpImgs(); }
 function showCover(box, url) {
   const al = box._album;
-  queueImg(smallCover(url), coverPrio(al), box, img => { img.alt = al ? "Album cover: " + al.title + " by " + al.artist : ""; box.append(img); });
+  queueImg(smallCover(url), box, img => { img.alt = al ? "Album cover: " + al.title + " by " + al.artist : ""; box.append(img); });
 }
-function warmFavorites(albums) {                    // favourites are fetched first, even before you scroll to them
+function warmFavorites(albums) {                    // favourites further down are fetched quietly in the background, after what is on screen
   if (!coversAllowed()) return;
-  coverMapReady.then(() => {
+  coverMapReady.then(() => setTimeout(() => {          // wait a moment so the covers on screen always get the first slots
     for (const a of albums) if (a.fav && (a.fav[0] || a.fav[1])) {
       const u = a.coverUrl || coverMap[coverKey(a)] || coverCache[coverKey(a)];
-      if (u) queueImg(smallCover(u), -1e15, null, () => {});
+      if (u) queueImg(smallCover(u), null, () => {});
     }
-  });
+  }, 1500));
 }
 window.warmFavorites = warmFavorites;
 async function lookupCover(a) {
