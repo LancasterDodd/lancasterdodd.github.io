@@ -207,6 +207,7 @@ async function loadAll() {                            // read the sheet and spli
   const data = await loadAlbums();
   albums = data.filter(a => !a.pending);
   listening = data.filter(a => a.pending);
+  warmFavorites(albums);
   return { albums, listening };
 }
 
@@ -222,13 +223,36 @@ const coverKey = a => fold(a.artist + "|" + a.title);
 const simple = s => fold(s).replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 
 const smallCover = url => url.replace(/\/\d+x\d+bb\.(jpg|png)/, "/300x300bb.$1").replace(/\/front-(500|1200)$/, "/front-250");   // phones need far fewer pixels: about 6x lighter than 600px
-function showCover(box, url) {
-  const img = new Image(); img.decoding = "async";
-  url = smallCover(url);
-  const al = box._album; img.alt = al ? "Album cover: " + al.title + " by " + al.artist : "";
-  img.onload = () => box.append(img);                // only show it once it has really loaded
-  img.src = url;
+/* Covers load through a small queue: 6 at a time, favourites first, then the most recently rated albums.
+   Albums the visitor has already scrolled past are skipped, so fast scrolling doesn't pile up downloads. */
+const imgQ = []; let imgActive = 0;
+const coverPrio = a => (a && a.fav && (a.fav[0] || a.fav[1])) ? -1e15 : -((a && a.date) || 0);     // lower = sooner
+function pumpImgs() {
+  while (imgActive < 6 && imgQ.length) {
+    const it = imgQ.shift();
+    if (it.box && !it.box.dataset.visible) { delete it.box.dataset.requested; continue; }      // scrolled past meanwhile: ask again when it comes back
+    imgActive++;
+    const img = new Image(); img.decoding = "async";
+    const fin = ok => { imgActive--; if (ok && it.box) it.done(img); pumpImgs(); };
+    img.onload = () => fin(true); img.onerror = () => fin(false);
+    img.src = it.url;
+  }
 }
+function queueImg(url, prio, box, done) { imgQ.push({ url, prio, box, done }); imgQ.sort((x, y) => x.prio - y.prio); pumpImgs(); }
+function showCover(box, url) {
+  const al = box._album;
+  queueImg(smallCover(url), coverPrio(al), box, img => { img.alt = al ? "Album cover: " + al.title + " by " + al.artist : ""; box.append(img); });
+}
+function warmFavorites(albums) {                    // favourites are fetched first, even before you scroll to them
+  if (!coversAllowed()) return;
+  coverMapReady.then(() => {
+    for (const a of albums) if (a.fav && (a.fav[0] || a.fav[1])) {
+      const u = a.coverUrl || coverMap[coverKey(a)] || coverCache[coverKey(a)];
+      if (u) queueImg(smallCover(u), -1e15, null, () => {});
+    }
+  });
+}
+window.warmFavorites = warmFavorites;
 async function lookupCover(a) {
   const q = encodeURIComponent(a.artist + " " + a.title);
   const res = await fetch("https://itunes.apple.com/search?media=music&entity=album&limit=8&term=" + q);
@@ -277,9 +301,9 @@ function onSeen(entries) {
   }
 }
 window.addEventListener("privacy-change", () => {
-  queue.length = 0;
+  queue.length = 0; imgQ.length = 0;
   if (!coversAllowed()) { coverCache = {}; document.querySelectorAll(".cover img").forEach(i => i.remove()); return; }
-  loadCache();
+  loadCache(); warmFavorites(albums);
   document.querySelectorAll(".cover").forEach(c => { if (c._album && c.dataset.visible && !c.querySelector("img")) { c.dataset.requested = "1"; wantCover(c._album, c); } });
 });
 const io = new IntersectionObserver(onSeen, { rootMargin: "300px" });      // for the big list (reset on every search/sort)
